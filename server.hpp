@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/06/29 07:00:04 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/07/04 04:48:05 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,16 +21,17 @@
 #include <vector>
 #include <fcntl.h>
 #include <poll.h>
-
+#include <map>
 
 class Client
 {
-    private:
+    public:
         int fd;
         std::string name;
         std::string in_buff;
         std::string out_buff;
     public:
+        Client(){}
         Client(int fd, std::string name, std::string in, std::string out)
         {
             this->fd = fd;
@@ -43,10 +44,22 @@ class Client
 class Server
 {
     private:
-        Client client;
+        int port_number;
+        std::string password;
+        std::map<int, Client> clients;
+        std::vector<struct pollfd> poll_fds;
+        int listening_fd;
+        std::string buffer;
     public:
+        Server();
+        Server(int port_num, std::string pass);
         void init_connection();
+        void run_server();
         void handle_connection();
+        int handle_arriving_data(size_t *i);        
+        int handle_sending_data(size_t *i);
+        void close_connection(size_t *i);
 };
 
 #endif
+
