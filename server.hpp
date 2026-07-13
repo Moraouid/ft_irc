@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/04 04:48:05 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/07/12 21:25:10 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <map>
+#include <exception>
 
 class Client
 {
@@ -51,6 +52,15 @@ class Server
         int listening_fd;
         std::string buffer;
     public:
+        class server_errors: public std::exception
+        {
+            private:
+                std::string msg;
+            public:
+                server_errors();
+                server_errors(std::string msg);
+                const char *what() throw();
+        };
         Server();
         Server(int port_num, std::string pass);
         void init_connection();
