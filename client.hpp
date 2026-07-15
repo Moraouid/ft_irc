@@ -4,7 +4,6 @@
 #include <string>
 #include <iostream>
 
-// Enum to track where the user is in the authentication flow
 enum RegistrationState {
     UNREGISTERED,
     PASS_ACCEPTED,
@@ -17,18 +16,15 @@ class Client {
         int                 fd;
         std::string         ipAddress;
         
-        // IRC Identity
         std::string         nickname;
         std::string         username;
         std::string         realname;
         
-        // State and Buffers
         RegistrationState   state;
         std::string         inBuffer;
         std::string         outBuffer;
 
     public:
-        // Canonical Form
         Client();
         Client(int fd, std::string ip);
         Client(const Client &copy);
@@ -48,7 +44,6 @@ class Client {
         void                setUsername(std::string user);
         void                setState(RegistrationState state);
 
-        // Buffer Management
         void                appendIn(std::string data);
         void                appendOut(std::string data);
         void                clearInBuffer();
