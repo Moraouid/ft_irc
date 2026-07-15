@@ -72,7 +72,7 @@ void Client::setUsername(std::string user) { username = user; }
 
 void Client::setState(RegistrationState state) { this->state = state; }
 
-void Client::appendIn(std::string data) { inBuffer += data; }
+void Client::appendIn(char data[1000], int rd) { inBuffer.append(data, rd); }
 
 void Client::appendOut(std::string data) { outBuffer += data; }
 

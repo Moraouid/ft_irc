@@ -45,7 +45,7 @@ class Client {
         void                setUsername(std::string user);
         void                setState(RegistrationState state);
 
-        void                appendIn(std::string data);
+        void                appendIn(char data[1000], int rd);
         void                appendOut(std::string data);
         void                clearInBuffer();
 };

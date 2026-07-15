@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/13 02:48:49 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/07/15 03:41:22 by sel-abbo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ void Server::handle_connection()
     int connect_fd = accept(listening_fd, NULL, NULL);
     poll_fds.push_back({connect_fd, POLLIN, 0});
     
-    std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd, "anonymous", "", ""));
+    std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd, ""));
     clients.insert(cl);
     // fcntl(connect_fd, F_SETFL, O_NONBLOCK);
     std::cout << "Client connected on fd " << connect_fd << std::endl;
@@ -56,16 +56,16 @@ int Server::handle_arriving_data(size_t *i)
     int rd = recv(poll_fds[*i].fd, temp_buf, sizeof(temp_buf), 0);
     if (rd > 0)
     {
-        clients[poll_fds[*i].fd].in_buff.append(temp_buf, rd);
-        std::cout << "From Client " << poll_fds[*i].fd << ": " << clients[poll_fds[*i].fd].in_buff;
+        clients[poll_fds[*i].fd].appendIn(temp_buf, rd);
+        std::cout << "From Client " << poll_fds[*i].fd << ": " << clients[poll_fds[*i].fd].getInBuffer();
         size_t delim;
         std::string cmd;
-        while ((delim = clients[poll_fds[*i].fd].in_buff.find("\n")) != std::string::npos)
+        while ((delim = clients[poll_fds[*i].fd].getInBuffer().find("\n")) != std::string::npos)
         {
-            cmd = clients[poll_fds[*i].fd].in_buff.substr(0, delim);
-            clients[poll_fds[*i].fd].in_buff.erase(0, delim+1);
+            cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, delim);
+            clients[poll_fds[*i].fd].getInBuffer().erase(0, delim+1);
 
-
+			// client.parseCommand(cmd);
             std::cout << cmd << std::endl;
         }
         // clients[poll_fds[*i].fd].out_buff = ":myserver 001 wiiik :Welcome HOOOO";
@@ -81,11 +81,11 @@ int Server::handle_arriving_data(size_t *i)
 int Server::handle_sending_data(size_t *i)
 {
     int s_ret;
-    std::string buff = clients[poll_fds[*i].fd].out_buff.c_str();
+    std::string buff = clients[poll_fds[*i].fd].getOutBuffer().c_str();
     s_ret = send(poll_fds[*i].fd,  buff.c_str(), buff.size(), 0);
     if (s_ret > 0)
     {
-        clients[poll_fds[*i].fd].out_buff.erase(0, s_ret);
+        clients[poll_fds[*i].fd].getOutBuffer().erase(0, s_ret);
     }
     else
     {
@@ -118,7 +118,7 @@ void Server::run_server()
         {
             if (poll_fds[i].fd == listening_fd)
                 continue;
-            if (!clients[poll_fds[i].fd].out_buff.empty())
+            if (!clients[poll_fds[i].fd].getOutBuffer().empty())
                 poll_fds[i].events |= POLLOUT;
             else
                 poll_fds[i].events = POLLIN;
