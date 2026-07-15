@@ -6,9 +6,11 @@
 /*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/14 02:47:54 by sel-abbo         ###   ########.fr       */
+/*   Updated: 2026/07/15 02:31:25 by sel-abbo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
@@ -22,6 +24,7 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <map>
+#include <exception>
 #include "client.hpp"
 
 //class Client
@@ -52,6 +55,15 @@ class Server
         int listening_fd;
         std::string buffer;
     public:
+        class server_errors: public std::exception
+        {
+            private:
+                std::string msg;
+            public:
+                server_errors();
+                server_errors(std::string msg);
+                const char *what() throw();
+        };
         Server();
         Server(int port_num, std::string pass);
         void init_connection();

@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/04 06:12:07 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/07/13 02:48:49 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,23 @@ Server::Server(int port_num, std::string pass): port_number(port_num), password(
 
 }
 
+Server::server_errors::server_errors()
+{
+    msg = "server error";
+}
+
+Server::server_errors::server_errors(std::string msg)
+{
+    this->msg = msg;
+}
+
+
+const char* Server::server_errors::what() throw()
+{
+    return msg.c_str();
+}
+
+
 void Server::handle_connection()
 {
     int connect_fd = accept(listening_fd, NULL, NULL);
@@ -29,15 +46,14 @@ void Server::handle_connection()
     
     std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd, "anonymous", "", ""));
     clients.insert(cl);
-    fcntl(connect_fd, F_SETFL, O_NONBLOCK);
+    // fcntl(connect_fd, F_SETFL, O_NONBLOCK);
     std::cout << "Client connected on fd " << connect_fd << std::endl;
 }
 
 int Server::handle_arriving_data(size_t *i)
 {
-    char temp_buf[100];
+    char temp_buf[1000];
     int rd = recv(poll_fds[*i].fd, temp_buf, sizeof(temp_buf), 0);
-
     if (rd > 0)
     {
         clients[poll_fds[*i].fd].in_buff.append(temp_buf, rd);
@@ -48,9 +64,11 @@ int Server::handle_arriving_data(size_t *i)
         {
             cmd = clients[poll_fds[*i].fd].in_buff.substr(0, delim);
             clients[poll_fds[*i].fd].in_buff.erase(0, delim+1);
+
+
             std::cout << cmd << std::endl;
         }
-        clients[poll_fds[*i].fd].out_buff = "WELCOME";
+        // clients[poll_fds[*i].fd].out_buff = ":myserver 001 wiiik :Welcome HOOOO";
     }
     else if (rd <= 0)
     {
@@ -65,7 +83,6 @@ int Server::handle_sending_data(size_t *i)
     int s_ret;
     std::string buff = clients[poll_fds[*i].fd].out_buff.c_str();
     s_ret = send(poll_fds[*i].fd,  buff.c_str(), buff.size(), 0);
-    std::cout << s_ret << std::endl;
     if (s_ret > 0)
     {
         clients[poll_fds[*i].fd].out_buff.erase(0, s_ret);
@@ -134,19 +151,21 @@ void Server::init_connection()
 {
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(55555);
+    serverAddress.sin_port = htons(6667);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
 
     int opt = 1;
     listening_fd  = socket(AF_INET, SOCK_STREAM, 0);
+    if (listening_fd < 0)
+        throw Server::server_errors("cannot create socket");
     if (setsockopt(listening_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-        std::cout << "setsockopt failed" << std::endl;
-    int b = bind(listening_fd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
-    if (b < 0)
-        std::cout << "bind failed" << std::endl;
-    int l = listen(listening_fd, 1);
+        throw Server::server_errors("cannot set socket option");
+    if (bind(listening_fd, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
+        throw Server::server_errors("cannot bind the socket");
+    if (listen(listening_fd, 1) < 0)
+        throw Server::server_errors("listen failed");
     poll_fds.push_back({listening_fd, POLLIN, 0});
-    fcntl(listening_fd, F_SETFL, O_NONBLOCK);
+    // fcntl(listening_fd, F_SETFL, O_NONBLOCK);
 }
 
 int main(int ac, char *av[])

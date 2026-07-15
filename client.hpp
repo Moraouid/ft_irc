@@ -4,6 +4,7 @@
 #include <string>
 #include <iostream>
 
+// Enum to track where the user is in the authentication flow
 enum RegistrationState {
     UNREGISTERED,
     PASS_ACCEPTED,
