@@ -6,7 +6,7 @@
 /*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/15 03:41:22 by sel-abbo         ###   ########.fr       */
+/*   Updated: 2026/07/16 02:32:24 by sel-abbo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,11 +168,11 @@ void Server::init_connection()
     // fcntl(listening_fd, F_SETFL, O_NONBLOCK);
 }
 
-int main(int ac, char *av[])
-{
-    // if (ac != 3)
-    //     return 0;
-    Server server;
-    server.init_connection();
-    server.run_server();
-}
+//int main(int ac, char *av[])
+//{
+//    // if (ac != 3)
+//    //     return 0;
+//    Server server;
+//    server.init_connection();
+//    server.run_server();
+//}
