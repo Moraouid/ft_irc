@@ -2,7 +2,7 @@ NAME = ft_irc
 CXX = c++
 
 CXXFLAGS = #-Wall -Wextra -Werror -std=c++98
-SRCS = server.cpp client.cpp 
+SRCS = main.cpp server.cpp client.cpp 
 
 OBJS = $(SRCS:.cpp=.o)
 RM = rm -f
