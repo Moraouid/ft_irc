@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
+/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/16 02:32:24 by sel-abbo         ###   ########.fr       */
+/*   Updated: 2026/07/18 02:00:28 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,6 @@ const char* Server::server_errors::what() throw()
 {
     return msg.c_str();
 }
-
 
 void Server::handle_connection()
 {
