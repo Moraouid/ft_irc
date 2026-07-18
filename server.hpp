@@ -3,12 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/12 21:25:10 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/07/15 02:31:25 by sel-abbo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+
 
 #ifndef SERVER_HPP
 #define SERVER_HPP
@@ -23,24 +25,25 @@
 #include <poll.h>
 #include <map>
 #include <exception>
+#include "client.hpp"
 
-class Client
-{
-    public:
-        int fd;
-        std::string name;
-        std::string in_buff;
-        std::string out_buff;
-    public:
-        Client(){}
-        Client(int fd, std::string name, std::string in, std::string out)
-        {
-            this->fd = fd;
-            this->fd = fd;
-            this->in_buff = in;
-            this->out_buff = out;
-        }
-};
+//class Client
+//{
+//    public:
+//        int fd;
+//        std::string name;
+//        std::string in_buff;
+//        std::string out_buff;
+//    public:
+//        Client(){}
+//        Client(int fd, std::string name, std::string in, std::string out)
+//        {
+//            this->fd = fd;
+//            this->fd = fd;
+//            this->in_buff = in;
+//            this->out_buff = out;
+//        }
+//};
 
 class Server
 {
