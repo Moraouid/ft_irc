@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/18 02:00:28 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/07/18 02:22:05 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,10 +38,19 @@ const char* Server::server_errors::what() throw()
     return msg.c_str();
 }
 
+Server::server_errors::~server_errors() throw()
+{
+
+}
+
 void Server::handle_connection()
 {
     int connect_fd = accept(listening_fd, NULL, NULL);
-    poll_fds.push_back({connect_fd, POLLIN, 0});
+    struct pollfd new_clt;
+    new_clt.fd = connect_fd;
+    new_clt.events = POLLIN;
+    new_clt.revents = 0;
+    poll_fds.push_back(new_clt);
     
     std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd, ""));
     clients.insert(cl);
@@ -163,7 +172,11 @@ void Server::init_connection()
         throw Server::server_errors("cannot bind the socket");
     if (listen(listening_fd, 1) < 0)
         throw Server::server_errors("listen failed");
-    poll_fds.push_back({listening_fd, POLLIN, 0});
+    struct pollfd listen_poll_fd;
+    listen_poll_fd.fd = listening_fd;
+    listen_poll_fd.events = POLLIN;
+    listen_poll_fd.revents = 0;
+    poll_fds.push_back(listen_poll_fd);
     // fcntl(listening_fd, F_SETFL, O_NONBLOCK);
 }
 
