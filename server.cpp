@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/13 02:48:49 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/07/17 23:32:10 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ const char* Server::server_errors::what() throw()
     return msg.c_str();
 }
 
-
 void Server::handle_connection()
 {
     int connect_fd = accept(listening_fd, NULL, NULL);
@@ -64,7 +63,6 @@ int Server::handle_arriving_data(size_t *i)
         {
             cmd = clients[poll_fds[*i].fd].in_buff.substr(0, delim);
             clients[poll_fds[*i].fd].in_buff.erase(0, delim+1);
-
 
             std::cout << cmd << std::endl;
         }
