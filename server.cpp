@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/18 02:22:05 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/07/21 03:11:46 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,11 @@ Server::server_errors::~server_errors() throw()
 void Server::handle_connection()
 {
     int connect_fd = accept(listening_fd, NULL, NULL);
+    if (connect_fd == -1)
+        return ;
+
     struct pollfd new_clt;
+
     new_clt.fd = connect_fd;
     new_clt.events = POLLIN;
     new_clt.revents = 0;
@@ -54,7 +58,7 @@ void Server::handle_connection()
     
     std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd, ""));
     clients.insert(cl);
-    // fcntl(connect_fd, F_SETFL, O_NONBLOCK);
+    fcntl(connect_fd, F_SETFL, O_NONBLOCK);
     std::cout << "Client connected on fd " << connect_fd << std::endl;
 }
 
@@ -77,13 +81,19 @@ int Server::handle_arriving_data(size_t *i)
             std::cout << cmd << std::endl;
         }
         // clients[poll_fds[*i].fd].out_buff = ":myserver 001 wiiik :Welcome HOOOO";
+        return 1;
     }
-    else if (rd <= 0)
+    else if (rd == 0)
     {
+        std::cout << "client fd: " << poll_fds[*i].fd << " disconnected" << std::endl; 
         close_connection(i);
         return 0;
     }
-    return 1;
+    if (errno == EAGAIN || errno == EWOULDBLOCK)
+        return 1;
+    std::cout << "error has occured" << std::endl;
+    close_connection(i);
+    return 0;
 }
 
 int Server::handle_sending_data(size_t *i)
@@ -92,11 +102,12 @@ int Server::handle_sending_data(size_t *i)
     std::string buff = clients[poll_fds[*i].fd].getOutBuffer().c_str();
     s_ret = send(poll_fds[*i].fd,  buff.c_str(), buff.size(), 0);
     if (s_ret > 0)
-    {
         clients[poll_fds[*i].fd].getOutBuffer().erase(0, s_ret);
-    }
     else
     {
+        if (errno == EAGAIN || errno == EWOULDBLOCK)
+            return 1;
+        std::cout << "error has occured" << std::endl;
         close_connection(i);
         return 0;
     }
@@ -177,7 +188,7 @@ void Server::init_connection()
     listen_poll_fd.events = POLLIN;
     listen_poll_fd.revents = 0;
     poll_fds.push_back(listen_poll_fd);
-    // fcntl(listening_fd, F_SETFL, O_NONBLOCK);
+    fcntl(listening_fd, F_SETFL, O_NONBLOCK);
 }
 
 //int main(int ac, char *av[])
