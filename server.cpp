@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/21 03:11:46 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/12 18:21:23 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,17 +83,9 @@ int Server::handle_arriving_data(size_t *i)
         // clients[poll_fds[*i].fd].out_buff = ":myserver 001 wiiik :Welcome HOOOO";
         return 1;
     }
-    else if (rd == 0)
-    {
-        std::cout << "client fd: " << poll_fds[*i].fd << " disconnected" << std::endl; 
+    else
         close_connection(i);
-        return 0;
-    }
-    if (errno == EAGAIN || errno == EWOULDBLOCK)
-        return 1;
-    std::cout << "error has occured" << std::endl;
-    close_connection(i);
-    return 0;
+    return 0;        
 }
 
 int Server::handle_sending_data(size_t *i)
@@ -105,9 +97,6 @@ int Server::handle_sending_data(size_t *i)
         clients[poll_fds[*i].fd].getOutBuffer().erase(0, s_ret);
     else
     {
-        if (errno == EAGAIN || errno == EWOULDBLOCK)
-            return 1;
-        std::cout << "error has occured" << std::endl;
         close_connection(i);
         return 0;
     }
