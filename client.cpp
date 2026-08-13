@@ -6,7 +6,6 @@ Client::Client()
 	ipAddress = "";
 	nickname = "";
 	username = "";
-	realname = "";
 	state = UNREGISTERED;
 	inBuffer = "";
 	outBuffer = "";
@@ -18,7 +17,7 @@ Client::Client(int fd, std::string ip)
 	this->ipAddress = ip;
 	nickname = "";
 	username = "";
-	realname = "";
+	pass = "";
 	state = UNREGISTERED;
 	inBuffer = "";
 	outBuffer = "";
@@ -30,7 +29,7 @@ Client::Client(const Client &copy)
 	ipAddress = copy.ipAddress;
 	nickname = copy.nickname;
 	username = copy.username;
-	realname = copy.realname;
+	pass = copy.pass;
 	state = copy.state;
 	inBuffer = copy.inBuffer;
 	outBuffer = copy.outBuffer;
@@ -44,7 +43,7 @@ Client &Client::operator=(const Client &assign)
 		ipAddress = assign.ipAddress;
 		nickname = assign.nickname;
 		username = assign.username;
-		realname = assign.realname;
+		pass = assign.pass;
 		state = assign.state;
 		inBuffer = assign.inBuffer;
 		outBuffer = assign.outBuffer;
@@ -70,7 +69,12 @@ void Client::setNickname(std::string nick) { nickname = nick; }
 
 void Client::setUsername(std::string user) { username = user; }
 
-void Client::setState(RegistrationState state) { this->state = state; }
+void Client::setState() {
+	if (username.empty() || nickname.empty() || pass.empty())
+		state = UNREGISTERED;
+	else
+		state = REGISTERED;
+}
 
 void Client::appendIn(char data[1000], int rd) { inBuffer.append(data, rd); }
 
@@ -110,4 +114,54 @@ void Client::parseCommand(std::string cmd, c_cmd *scmd)
 		scmd->cmd = cmd;
 		scmd->args.push_back("");
 	}	
+}
+
+
+void Client::handleCommand(c_cmd *scmd, std::string password)
+{
+	if(getState()== UNREGISTERED)
+	{
+		if(scmd->cmd == "PASS")
+		{
+			setPass(scmd->args[0]);
+			appendOut("Password set successfully.\n");
+
+		}
+		else if(scmd->cmd == "NICK")
+		{
+			setNickname(scmd->args[0]);
+			appendOut("Nickname set successfully.\n");
+		}
+		else if(scmd->cmd == "USER")
+		{
+			setUsername(scmd->args[0]);
+			appendOut("Username set successfully.\n");
+		}
+		else
+		{
+			appendOut("You must register first using PASS, NICK, and USER commands.\n");
+		}
+		setState();
+		if(getState() == REGISTERED)
+			appendOut("You are now registered!\n");
+	}
+	else
+	{
+		if (scmd->cmd == "PRIVMSG" && scmd->args.size() == 2)
+		{
+			appendOut("Message sent to " + scmd->args[0] + ": " + scmd->args[1] + "\n");
+		}
+		else if (scmd->cmd == "JOIN")
+		{
+			appendOut("Joined channel: " + scmd->args[0] + "\n");
+		}
+		else if (scmd->cmd == "PART")
+		{
+			appendOut("Left channel: " + scmd->args[0] + "\n");
+		}
+		else
+		{
+			appendOut("Unknown command: " + scmd->cmd + "\n");
+		}
+	}
 }

@@ -14,8 +14,6 @@ typedef struct command
 enum RegistrationState
 {
 	UNREGISTERED,
-	PASS_ACCEPTED,
-	NICK_SET,
 	REGISTERED
 };
 
@@ -27,7 +25,7 @@ private:
 
 	std::string nickname;
 	std::string username;
-	std::string realname;
+	std::string pass;
 
 	RegistrationState state;
 	std::string inBuffer;
@@ -51,9 +49,13 @@ public:
 	// Setters
 	void setNickname(std::string nick);
 	void setUsername(std::string user);
-	void setState(RegistrationState state);
+	void setPass(std::string password){
+		pass = password;
+	};
+	void setState();
 
 	void parseCommand(std::string cmd, c_cmd *scmd);
+	void handleCommand(c_cmd *scmd, std::string password);
 	void appendIn(char data[1000], int rd);
 	void appendOut(std::string data);
 	void clearInBuffer();
