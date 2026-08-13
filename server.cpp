@@ -6,7 +6,7 @@
 /*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/13 15:48:32 by sel-abbo         ###   ########.fr       */
+/*   Updated: 2026/08/13 18:15:52 by sel-abbo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,7 +79,7 @@ int Server::handle_arriving_data(size_t *i)
             clients[poll_fds[*i].fd].getInBuffer().erase(0, delim+1);
 
 			clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
-			clients[poll_fds[*i].fd].handleCommand(&scmd, password);
+			clients[poll_fds[*i].fd].handleCommand(&scmd, password, clients);
 			
             std::cout << cmd << std::endl;
         }
@@ -164,6 +164,8 @@ void Server::init_connection()
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(6667);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
+	password = "pass";
+	
 
     int opt = 1;
     listening_fd  = socket(AF_INET, SOCK_STREAM, 0);

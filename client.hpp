@@ -4,6 +4,9 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <map>
+#include <sys/socket.h>
+
 
 typedef struct command
 {
@@ -55,7 +58,7 @@ public:
 	void setState();
 
 	void parseCommand(std::string cmd, c_cmd *scmd);
-	void handleCommand(c_cmd *scmd, std::string password);
+	void handleCommand(c_cmd *scmd, std::string password, std::map<int, Client> &clients);
 	void appendIn(char data[1000], int rd);
 	void appendOut(std::string data);
 	void clearInBuffer();

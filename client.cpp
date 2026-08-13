@@ -69,7 +69,8 @@ void Client::setNickname(std::string nick) { nickname = nick; }
 
 void Client::setUsername(std::string user) { username = user; }
 
-void Client::setState() {
+void Client::setState()
+{
 	if (username.empty() || nickname.empty() || pass.empty())
 		state = UNREGISTERED;
 	else
@@ -82,7 +83,6 @@ void Client::appendOut(std::string data) { outBuffer += data; }
 
 void Client::clearInBuffer() { inBuffer.clear(); }
 
-
 void Client::parseCommand(std::string cmd, c_cmd *scmd)
 {
 	size_t spacePos = cmd.find(' ');
@@ -94,7 +94,7 @@ void Client::parseCommand(std::string cmd, c_cmd *scmd)
 			size_t nextSpacePos = cmd.find(' ', spacePos + 1);
 			if (nextSpacePos != std::string::npos)
 			{
-				if(cmd[spacePos + 1] == ':')
+				if (cmd[spacePos + 1] == ':')
 				{
 					scmd->args.push_back(cmd.substr(spacePos + 2));
 					break;
@@ -113,26 +113,38 @@ void Client::parseCommand(std::string cmd, c_cmd *scmd)
 	{
 		scmd->cmd = cmd;
 		scmd->args.push_back("");
-	}	
+	}
 }
 
-
-void Client::handleCommand(c_cmd *scmd, std::string password)
+void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Client> &clients)
 {
-	if(getState()== UNREGISTERED)
+	if (getState() == UNREGISTERED)
 	{
-		if(scmd->cmd == "PASS")
+		if (scmd->cmd == "PASS")
 		{
+			if(scmd->args[0] != password)
+			{
+				appendOut("Incorrect password. Please try again.\n");
+				return;
+			}
 			setPass(scmd->args[0]);
 			appendOut("Password set successfully.\n");
-
 		}
-		else if(scmd->cmd == "NICK")
+		else if (scmd->cmd == "NICK")
 		{
 			setNickname(scmd->args[0]);
+			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+			{
+				if (it->second.getNickname() == getNickname() && it->first != getFd())
+				{
+					setNickname(getNickname() + "_");
+					it = clients.begin();
+					appendOut("Nickname already taken. Changed to: " + getNickname() + "\n");
+				}
+			}
 			appendOut("Nickname set successfully.\n");
 		}
-		else if(scmd->cmd == "USER")
+		else if (scmd->cmd == "USER")
 		{
 			setUsername(scmd->args[0]);
 			appendOut("Username set successfully.\n");
@@ -142,14 +154,24 @@ void Client::handleCommand(c_cmd *scmd, std::string password)
 			appendOut("You must register first using PASS, NICK, and USER commands.\n");
 		}
 		setState();
-		if(getState() == REGISTERED)
+		if (getState() == REGISTERED)
 			appendOut("You are now registered!\n");
 	}
 	else
 	{
 		if (scmd->cmd == "PRIVMSG" && scmd->args.size() == 2)
 		{
-			appendOut("Message sent to " + scmd->args[0] + ": " + scmd->args[1] + "\n");
+			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+			{
+				if (it->second.getNickname() == scmd->args[0])
+				{
+					std::string message = ":myserver PRIVMSG " + scmd->args[0] + " :" + scmd->args[1] + "\n";
+					send(it->first, message.c_str(), message.size(), 0);
+					it->second.appendOut("Message from " + getNickname() + ": " + scmd->args[1] + "\n");
+					return;
+				}
+			}
+			appendOut("User not found.	\n");
 		}
 		else if (scmd->cmd == "JOIN")
 		{
