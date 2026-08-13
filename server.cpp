@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/12 18:21:23 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/13 15:08:42 by sel-abbo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,7 @@ void Server::handle_connection()
 int Server::handle_arriving_data(size_t *i)
 {
     char temp_buf[1000];
+	c_cmd scmd;
     int rd = recv(poll_fds[*i].fd, temp_buf, sizeof(temp_buf), 0);
     if (rd > 0)
     {
@@ -77,7 +78,8 @@ int Server::handle_arriving_data(size_t *i)
             cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, delim);
             clients[poll_fds[*i].fd].getInBuffer().erase(0, delim+1);
 
-			// client.parseCommand(cmd);
+			clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
+			
             std::cout << cmd << std::endl;
         }
         // clients[poll_fds[*i].fd].out_buff = ":myserver 001 wiiik :Welcome HOOOO";

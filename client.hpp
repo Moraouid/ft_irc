@@ -3,51 +3,60 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 
-// Enum to track where the user is in the authentication flow
-enum RegistrationState {
-    UNREGISTERED,
-    PASS_ACCEPTED,
-    NICK_SET,
-    REGISTERED
+typedef struct command
+{
+	std::string cmd;
+	std::vector<std::string> args;
+} c_cmd;
+
+enum RegistrationState
+{
+	UNREGISTERED,
+	PASS_ACCEPTED,
+	NICK_SET,
+	REGISTERED
 };
 
-class Client {
-    private:
-        int                 fd;
-        std::string         ipAddress;
-        
-        std::string         nickname;
-        std::string         username;
-        std::string         realname;
-        
-        RegistrationState   state;
-        std::string         inBuffer;
-        std::string         outBuffer;
+class Client
+{
+private:
+	int fd;
+	std::string ipAddress;
 
-    public:
-        Client();
-        Client(int fd, std::string ip);
-        Client(const Client &copy);
-        Client &operator=(const Client &assign);
-        ~Client();
+	std::string nickname;
+	std::string username;
+	std::string realname;
 
-        // Getters
-        int                 getFd() const;
-        std::string         getNickname() const;
-        std::string         getUsername() const;
-        RegistrationState   getState() const;
-        std::string&        getInBuffer();
-        std::string&        getOutBuffer();
+	RegistrationState state;
+	std::string inBuffer;
+	std::string outBuffer;
 
-        // Setters
-        void                setNickname(std::string nick);
-        void                setUsername(std::string user);
-        void                setState(RegistrationState state);
+public:
+	Client();
+	Client(int fd, std::string ip);
+	Client(const Client &copy);
+	Client &operator=(const Client &assign);
+	~Client();
 
-        void                appendIn(char data[1000], int rd);
-        void                appendOut(std::string data);
-        void                clearInBuffer();
+	// Getters
+	int getFd() const;
+	std::string getNickname() const;
+	std::string getUsername() const;
+	RegistrationState getState() const;
+	std::string &getInBuffer();
+	std::string &getOutBuffer();
+
+	// Setters
+	void setNickname(std::string nick);
+	void setUsername(std::string user);
+	void setState(RegistrationState state);
+
+	void parseCommand(std::string cmd, c_cmd *scmd);
+	void appendIn(char data[1000], int rd);
+	void appendOut(std::string data);
+	void clearInBuffer();
 };
 
 #endif

@@ -77,3 +77,37 @@ void Client::appendIn(char data[1000], int rd) { inBuffer.append(data, rd); }
 void Client::appendOut(std::string data) { outBuffer += data; }
 
 void Client::clearInBuffer() { inBuffer.clear(); }
+
+
+void Client::parseCommand(std::string cmd, c_cmd *scmd)
+{
+	size_t spacePos = cmd.find(' ');
+	if (spacePos != std::string::npos)
+	{
+		scmd->cmd = cmd.substr(0, spacePos);
+		while (spacePos != std::string::npos)
+		{
+			size_t nextSpacePos = cmd.find(' ', spacePos + 1);
+			if (nextSpacePos != std::string::npos)
+			{
+				if(cmd[spacePos + 1] == ':')
+				{
+					scmd->args.push_back(cmd.substr(spacePos + 2));
+					break;
+				}
+				else
+					scmd->args.push_back(cmd.substr(spacePos + 1, nextSpacePos - spacePos - 1));
+			}
+			else
+			{
+				scmd->args.push_back(cmd.substr(spacePos + 1));
+			}
+			spacePos = nextSpacePos;
+		}
+	}
+	else
+	{
+		scmd->cmd = cmd;
+		scmd->args.push_back("");
+	}	
+}
