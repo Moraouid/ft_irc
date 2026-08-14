@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/14 01:58:12 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/14 03:19:07 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include <map>
 #include <exception>
 #include "client.hpp"
+#include <signal.h>
 
 //class Client
 //{

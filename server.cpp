@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/14 02:15:26 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/14 03:17:54 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,18 +71,23 @@ int Server::handle_arriving_data(size_t *i)
     if (rd > 0)
     {
         clients[poll_fds[*i].fd].appendIn(temp_buf, rd);
-        std::cout << "From Client " << poll_fds[*i].fd << ": " << clients[poll_fds[*i].fd].getInBuffer();
         size_t delim;
         std::string cmd;
         while ((delim = clients[poll_fds[*i].fd].getInBuffer().find("\n")) != std::string::npos)
         {
-            cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, delim);
+            if (delim + 1 > 512)
+                cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, 510);
+            else
+                cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, delim);
             clients[poll_fds[*i].fd].getInBuffer().erase(0, delim+1);
-
-			// client.parseCommand(cmd);
-            std::cout << cmd << std::endl;
+            if (!cmd.empty() && cmd[cmd.size() - 1] == '\r')
+                cmd.erase(cmd.size() - 1);
+            if (!cmd.empty())
+            {
+                std::cout << cmd << std::endl;
+                // parsing and executing logic
+            }
         }
-        // clients[poll_fds[*i].fd].out_buff = ":myserver 001 wiiik :Welcome HOOOO";
         return 1;
     }
     else
