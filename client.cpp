@@ -165,8 +165,6 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			{
 				if (it->second.getNickname() == scmd->args[0])
 				{
-					std::string message = ":myserver PRIVMSG " + scmd->args[0] + " :" + scmd->args[1] + "\n";
-					send(it->first, message.c_str(), message.size(), 0);
 					it->second.appendOut("Message from " + getNickname() + ": " + scmd->args[1] + "\n");
 					return;
 				}
