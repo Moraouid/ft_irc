@@ -26,6 +26,7 @@
 #include <map>
 #include <exception>
 #include "client.hpp"
+#include <signal.h>
 
 //class Client
 //{
@@ -70,9 +71,10 @@ class Server
         void init_connection();
         void run_server();
         void handle_connection();
-        int handle_arriving_data(size_t *i);        
+        int handle_arriving_data(size_t *i);    
         int handle_sending_data(size_t *i);
         void close_connection(size_t *i);
+        void clear_server();
 };
 
 #endif

@@ -6,11 +6,13 @@
 /*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/13 18:15:52 by sel-abbo         ###   ########.fr       */
+/*   Updated: 2026/08/14 03:17:54 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "server.hpp"
+
+extern int is_run;
 
 Server::Server()
 {
@@ -70,12 +72,14 @@ int Server::handle_arriving_data(size_t *i)
     if (rd > 0)
     {
         clients[poll_fds[*i].fd].appendIn(temp_buf, rd);
-        std::cout << "From Client " << poll_fds[*i].fd << ": " << clients[poll_fds[*i].fd].getInBuffer();
         size_t delim;
         std::string cmd;
         while ((delim = clients[poll_fds[*i].fd].getInBuffer().find("\n")) != std::string::npos)
         {
-            cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, delim);
+            if (delim + 1 > 512)
+                cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, 510);
+            else
+                cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, delim);
             clients[poll_fds[*i].fd].getInBuffer().erase(0, delim+1);
 
 			clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
@@ -83,12 +87,11 @@ int Server::handle_arriving_data(size_t *i)
 			
             std::cout << cmd << std::endl;
         }
-        // clients[poll_fds[*i].fd].out_buff = ":myserver 001 wiiik :Welcome HOOOO";
         return 1;
     }
     else
         close_connection(i);
-    return 0;        
+    return 0;
 }
 
 int Server::handle_sending_data(size_t *i)
@@ -123,7 +126,7 @@ void Server::close_connection(size_t *i)
 void Server::run_server()
 {
     int poll_ret = 0;
-    while (1)
+    while (is_run)
     {
         for (size_t i = 0; i < poll_fds.size(); i++)
         {
@@ -156,6 +159,7 @@ void Server::run_server()
             }
         }
     }
+    clear_server();
 }
 
 void Server::init_connection()
@@ -185,11 +189,15 @@ void Server::init_connection()
     fcntl(listening_fd, F_SETFL, O_NONBLOCK);
 }
 
-//int main(int ac, char *av[])
-//{
-//    // if (ac != 3)
-//    //     return 0;
-//    Server server;
-//    server.init_connection();
-//    server.run_server();
-//}
+void Server::clear_server()
+{
+    std::cout << "shutting down the server" << std::endl;
+
+    std::map<int, Client>::iterator it;
+    std::string error_message = "ERROR :Server shutting down\r\n";
+    for (it = clients.begin(); it != clients.end(); it++)
+        send(it->second.getFd(), error_message.c_str(), error_message.size(), 0);
+
+    for (size_t i = 0; i < poll_fds.size(); i++)
+        close(poll_fds[i].fd);
+}
