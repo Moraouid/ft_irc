@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/07/18 02:17:24 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/14 01:58:12 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,9 +70,10 @@ class Server
         void init_connection();
         void run_server();
         void handle_connection();
-        int handle_arriving_data(size_t *i);        
+        int handle_arriving_data(size_t *i);    
         int handle_sending_data(size_t *i);
         void close_connection(size_t *i);
+        void clear_server();
 };
 
 #endif
