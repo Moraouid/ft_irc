@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
+/*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/14 03:17:54 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/15 19:42:11 by sfaouzi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,10 @@ extern int is_run;
 
 Server::Server()
 {
-
 }
 
-Server::Server(int port_num, std::string pass): port_number(port_num), password(pass)
+Server::Server(int port_num, std::string pass) : port_number(port_num), password(pass)
 {
-
 }
 
 Server::server_errors::server_errors()
@@ -34,22 +32,20 @@ Server::server_errors::server_errors(std::string msg)
     this->msg = msg;
 }
 
-
-const char* Server::server_errors::what() throw()
+const char *Server::server_errors::what() throw()
 {
     return msg.c_str();
 }
 
 Server::server_errors::~server_errors() throw()
 {
-
 }
 
 void Server::handle_connection()
 {
     int connect_fd = accept(listening_fd, NULL, NULL);
     if (connect_fd == -1)
-        return ;
+        return;
 
     struct pollfd new_clt;
 
@@ -57,7 +53,7 @@ void Server::handle_connection()
     new_clt.events = POLLIN;
     new_clt.revents = 0;
     poll_fds.push_back(new_clt);
-    
+
     std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd, ""));
     clients.insert(cl);
     fcntl(connect_fd, F_SETFL, O_NONBLOCK);
@@ -67,7 +63,6 @@ void Server::handle_connection()
 int Server::handle_arriving_data(size_t *i)
 {
     char temp_buf[1000];
-	c_cmd scmd;
     int rd = recv(poll_fds[*i].fd, temp_buf, sizeof(temp_buf), 0);
     if (rd > 0)
     {
@@ -76,16 +71,21 @@ int Server::handle_arriving_data(size_t *i)
         std::string cmd;
         while ((delim = clients[poll_fds[*i].fd].getInBuffer().find("\n")) != std::string::npos)
         {
+            c_cmd scmd;
             if (delim + 1 > 512)
                 cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, 510);
             else
                 cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, delim);
-            clients[poll_fds[*i].fd].getInBuffer().erase(0, delim+1);
-
-			clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
-			clients[poll_fds[*i].fd].handleCommand(&scmd, password, clients);
-			
-            std::cout << cmd << std::endl;
+            clients[poll_fds[*i].fd].getInBuffer().erase(0, delim + 1);
+            if (!cmd.empty() && cmd[cmd.size() - 1] == '\r')
+                cmd.erase(cmd.size() - 1);
+            if (!cmd.empty())
+            {
+                std::cout << cmd << std::endl;
+                clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
+                clients[poll_fds[*i].fd].handleCommand(&scmd, password, clients);
+                // parsing and executing logic
+            }
         }
         return 1;
     }
@@ -98,7 +98,7 @@ int Server::handle_sending_data(size_t *i)
 {
     int s_ret;
     std::string buff = clients[poll_fds[*i].fd].getOutBuffer().c_str();
-    s_ret = send(poll_fds[*i].fd,  buff.c_str(), buff.size(), 0);
+    s_ret = send(poll_fds[*i].fd, buff.c_str(), buff.size(), 0);
     if (s_ret > 0)
         clients[poll_fds[*i].fd].getOutBuffer().erase(0, s_ret);
     else
@@ -151,8 +151,8 @@ void Server::run_server()
                 }
                 if (poll_fds[i].revents & POLLOUT)
                 {
-                        if (!handle_sending_data(&i))
-                            continue;
+                    if (!handle_sending_data(&i))
+                        continue;
                 }
                 if (poll_fds[i].revents & (POLLHUP | POLLERR))
                     close_connection(&i);
@@ -168,11 +168,10 @@ void Server::init_connection()
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(6667);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
-	password = "pass";
-	
+    password = "pass";
 
     int opt = 1;
-    listening_fd  = socket(AF_INET, SOCK_STREAM, 0);
+    listening_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listening_fd < 0)
         throw Server::server_errors("cannot create socket");
     if (setsockopt(listening_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
