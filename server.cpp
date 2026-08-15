@@ -6,7 +6,7 @@
 /*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/15 19:42:11 by sfaouzi          ###   ########.fr       */
+/*   Updated: 2026/08/15 19:46:04 by sfaouzi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -120,7 +120,7 @@ void Server::close_connection(size_t *i)
     poll_fds.erase(poll_fds.begin() + *i);
 
     std::cout << "client " << fd << " disconnected" << std::endl;
-    i--;
+    (*i)--;
 }
 
 void Server::run_server()
