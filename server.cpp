@@ -6,7 +6,7 @@
 /*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/15 19:46:04 by sfaouzi          ###   ########.fr       */
+/*   Updated: 2026/08/16 21:52:04 by sfaouzi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,8 @@ int Server::handle_arriving_data(size_t *i)
         while ((delim = clients[poll_fds[*i].fd].getInBuffer().find("\n")) != std::string::npos)
         {
             c_cmd scmd;
+            scmd.cmd.clear();
+            scmd.args.clear();
             if (delim + 1 > 512)
                 cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, 510);
             else
@@ -83,7 +85,7 @@ int Server::handle_arriving_data(size_t *i)
             {
                 std::cout << cmd << std::endl;
                 clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
-                clients[poll_fds[*i].fd].handleCommand(&scmd, password, clients);
+                clients[poll_fds[*i].fd].handleCommand(&scmd, password, clients, channels);
                 // parsing and executing logic
             }
         }
@@ -186,6 +188,44 @@ void Server::init_connection()
     listen_poll_fd.revents = 0;
     poll_fds.push_back(listen_poll_fd);
     fcntl(listening_fd, F_SETFL, O_NONBLOCK);
+}
+
+Channel *Server::getChannel(const std::string &channelName)
+{
+    std::map<std::string, Channel>::iterator it = channels.find(channelName);
+    if (it == channels.end())
+        return NULL;
+    return &it->second;
+}
+
+bool Server::createChannel(const std::string &channelName)
+{
+    if (channels.find(channelName) != channels.end())
+        return false;
+    channels.insert(std::make_pair(channelName, Channel(channelName)));
+    return true;
+}
+
+void Server::joinChannel(int clientFd, const std::string &channelName)
+{
+    std::map<std::string, Channel>::iterator it = channels.find(channelName);
+    if (it == channels.end())
+        return;
+    it->second.addMember(clientFd);
+    std::map<int, Client>::iterator clientIt = clients.find(clientFd);
+    if (clientIt != clients.end())
+        clientIt->second.joinChannel(channelName);
+}
+
+void Server::partChannel(int clientFd, const std::string &channelName)
+{
+    std::map<std::string, Channel>::iterator it = channels.find(channelName);
+    if (it == channels.end())
+        return;
+    it->second.removeMember(clientFd);
+    std::map<int, Client>::iterator clientIt = clients.find(clientFd);
+    if (clientIt != clients.end())
+        clientIt->second.leaveChannel(channelName);
 }
 
 void Server::clear_server()
