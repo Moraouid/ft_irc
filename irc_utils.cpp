@@ -35,3 +35,8 @@ std::string generateTimestamp()
     strftime(buffer, sizeof(buffer), "%H:%M:%S", timeInfo);
     return std::string(buffer);
 }
+
+std::string formatReply(const std::string &code, const std::string &nickname, const std::string &message)
+{
+    return std::string(":irc ") + code + " " + nickname + " :" + message + "\r\n";
+}
