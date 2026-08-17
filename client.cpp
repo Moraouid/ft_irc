@@ -167,7 +167,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 		{
 			if (scmd->args.empty() || scmd->args[0].empty() || scmd->args[0] != password)
 			{
-				appendOut("Incorrect password. Please try again.\n");
+				appendOut(formatReply("464", "*", "Incorrect password"));
 				return;
 			}
 			setPass(scmd->args[0]);
@@ -177,7 +177,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 		{
 			if (scmd->args.empty() || scmd->args[0].empty())
 			{
-				appendOut("Nickname cannot be empty.\n");
+				appendOut(formatReply("431", "*", "No nickname given"));
 				return;
 			}
 			setNickname(scmd->args[0]);
@@ -187,16 +187,17 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				{
 					setNickname(getNickname() + "_");
 					it = clients.begin();
-					appendOut("Nickname already taken. Changed to: " + getNickname() + "\n");
+					appendOut(formatReply("433", getNickname(), "Nickname is already in use"));
+					return;
 				}
 			}
-			appendOut("Nickname set successfully.\n");
+			appendOut(formatReply("001", getNickname(), "Welcome to the Internet Relay Network"));
 		}
 		else if (scmd->cmd == "USER")
 		{
 			if (scmd->args.empty() || scmd->args[0].empty())
 			{
-				appendOut("Username cannot be empty.\n");
+				appendOut(formatReply("461", nickname, "USER :Not enough parameters"));
 				return;
 			}
 			setUsername(scmd->args[0]);
@@ -204,11 +205,11 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 		}
 		else
 		{
-			appendOut("You must register first using PASS, NICK, and USER commands.\n");
+			appendOut(formatReply("451", "*", "You have not registered"));
 		}
 		setState();
 		if (getState() == REGISTERED)
-			appendOut("you are a registred\n");
+			appendOut(formatReply("001", nickname, "Welcome to the Internet Relay Network"));
 	}
 	else
 	{
@@ -225,7 +226,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 					it->second.broadcast(message, fd, clients);
 					return;
 				}
-				appendOut("Channel not found or you are not in it.\n");
+				appendOut(formatReply("403", nickname, target + " :No such channel"));
 				return;
 			}
 
@@ -237,13 +238,13 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 					return;
 				}
 			}
-			appendOut("User not found.\n");
+			appendOut(formatReply("401", nickname, target + " :No such nick"));
 		}
 		else if (scmd->cmd == "JOIN")
 		{
 			if (scmd->args.empty() || scmd->args[0].empty())
 			{
-				appendOut("JOIN requires a channel name.\n");
+				appendOut(formatReply("461", nickname, "JOIN :Not enough parameters"));
 				return;
 			}
 			std::string channelName = scmd->args[0];
@@ -256,7 +257,8 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			}
 			chIt->second.addMember(fd);
 			joinChannel(channelName);
-			appendOut("Joined channel: " + channelName + "\n");
+			appendOut(formatReply("353", nickname, "= " + channelName + " :@" + nickname));
+			appendOut(formatReply("366", nickname, channelName + " :End of NAMES list"));
 			debugPrint("Client " + nickname + " joined " + channelName);
 		}
 		else if (scmd->cmd == "TOPIC")
@@ -269,16 +271,16 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 					std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
 					if (chIt != channels.end())
 					{
-						appendOut("Current topic for " + channelName + ": " + chIt->second.getTopic() + "\n");
+						appendOut(formatReply("332", nickname, channelName + " :" + chIt->second.getTopic()));
 						return;
 					}
 					else
 					{
-						appendOut("Channel not found: " + channelName + "\n");
+						appendOut(formatReply("403", nickname, channelName + " :No such channel"));
 						return;
 					}
 				}
-				appendOut("TOPIC requires a channel and a topic.\n");
+				appendOut(formatReply("461", nickname, "TOPIC :Not enough parameters"));
 				return;
 			}
 			std::string channelName = scmd->args[0];
@@ -286,14 +288,30 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			if (chIt != channels.end())
 			{
 				chIt->second.setTopic(scmd->args[1]);
-				appendOut("Topic updated for " + channelName + ": " + scmd->args[1] + "\n");
+				appendOut(formatReply("332", nickname, channelName + " :" + scmd->args[1]));
 			}
 			else
-				appendOut("Channel not found: " + channelName + "\n");
+				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
 		}
-		else
+		else if (scmd->cmd == "KICK")
 		{
-			appendOut("Unknown command: " + scmd->cmd + "\n");
+			if (scmd->args.empty() || scmd->args[0].empty())
+			{
+				appendOut(formatReply("461", nickname, "KICK :Not enough parameters"));
+				return;
+			}
+			std::string channelName = scmd->args[0];
+			std::string memberName = scmd->args[1];
+			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
+			if (chIt == channels.end())
+			{
+				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
+				return;
+			}
+			chIt->second.removeMember(fd);
+			leaveChannel(channelName);
+			appendOut(formatReply("KICK", nickname, channelName + " " + memberName + " :You have been kicked from the channel"));
+			debugPrint("Client " + nickname + " kicked " + memberName + " from " + channelName);
 		}
 	}
 }
