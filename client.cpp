@@ -293,9 +293,25 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			else
 				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
 		}
-		else
+		else if (scmd->cmd == "KICK")
 		{
-			// Unknown command - silently ignore
+			if (scmd->args.empty() || scmd->args[0].empty())
+			{
+				appendOut(formatReply("461", nickname, "KICK :Not enough parameters"));
+				return;
+			}
+			std::string channelName = scmd->args[0];
+			std::string memberName = scmd->args[1];
+			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
+			if (chIt == channels.end())
+			{
+				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
+				return;
+			}
+			chIt->second.removeMember(fd);
+			leaveChannel(channelName);
+			appendOut(formatReply("KICK", nickname, channelName + " " + memberName + " :You have been kicked from the channel"));
+			debugPrint("Client " + nickname + " kicked " + memberName + " from " + channelName);
 		}
 	}
 }
