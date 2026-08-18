@@ -188,7 +188,6 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 					setNickname(getNickname() + "_");
 					it = clients.begin();
 					appendOut(formatReply("433", getNickname(), "Nickname is already in use"));
-					return;
 				}
 			}
 			appendOut(formatReply("001", getNickname(), "Welcome to the Internet Relay Network"));
@@ -255,6 +254,11 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				chIt = channels.find(channelName);
 				chIt->second.addOperator(fd);
 			}
+			if (chIt->second.getIsPrivate() && !chIt->second.isOperator(fd) && !chIt->second.isInvited(fd))
+			{
+				appendOut(formatReply("473", nickname, channelName + " :Cannot join channel (+i)"));
+				return;
+			}
 			chIt->second.addMember(fd);
 			joinChannel(channelName);
 			appendOut(formatReply("353", nickname, "= " + channelName + " :@" + nickname));
@@ -312,6 +316,49 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			leaveChannel(channelName);
 			appendOut(formatReply("KICK", nickname, channelName + " " + memberName + " :You have been kicked from the channel"));
 			debugPrint("Client " + nickname + " kicked " + memberName + " from " + channelName);
+		}
+		else if (scmd->cmd == "MODE")
+		{
+			if (scmd->args.empty() || scmd->args[0].empty())
+			{
+				appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+				return;
+			}
+			std::string channelName = scmd->args[0];
+			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
+			if (chIt == channels.end())
+			{
+				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
+				return;
+			}
+			if (scmd->args.size() < 2)
+			{
+				std::string modes = chIt->second.getIsPrivate() ? "+i" : "";
+				appendOut(formatReply("324", nickname, channelName + " " + modes));
+				return;
+			}
+
+			if (!chIt->second.isOperator(getFd()))
+			{
+				appendOut(formatReply("482", nickname, channelName + " :You're not channel operator"));
+				return;
+			}
+
+			std::string modeChange = scmd->args[1];
+			if (modeChange == "+i")
+			{
+				chIt->second.setPrivate(true);
+				appendOut(formatReply("324", nickname, channelName + " +i"));
+			}
+			else if (modeChange == "-i")
+			{
+				chIt->second.setPrivate(false);
+				appendOut(formatReply("324", nickname, channelName + " -i"));
+			}
+			else
+			{
+				appendOut(formatReply("472", nickname, modeChange + " :is unknown mode char to me"));
+			}
 		}
 	}
 }

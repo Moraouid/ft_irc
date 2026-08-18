@@ -1,9 +1,9 @@
 #include "channel.hpp"
 #include "client.hpp"
 
-Channel::Channel() : name(""), topic("default topic") {}
+Channel::Channel() : name(""), topic("default topic"), isPrivate(false) {}
 
-Channel::Channel(const std::string &channelName) : name(channelName), topic("default topic") {}
+Channel::Channel(const std::string &channelName) : name(channelName), topic("default topic"), isPrivate(false) {}
 
 Channel::~Channel() {}
 
@@ -96,4 +96,42 @@ void Channel::broadcast(const std::string &message, int senderFd, std::map<int, 
         if (clientIt != clients.end())
             clientIt->second.appendOut(message);
     }
+}
+
+void Channel::setPrivate(bool isPrivate)
+{
+    this->isPrivate = isPrivate;
+}
+
+bool Channel::getIsPrivate() const
+{
+    return isPrivate;
+}
+
+bool Channel::isInvited(int fd) const
+{
+    return std::find(invitedMembers.begin(), invitedMembers.end(), fd) != invitedMembers.end();
+}
+
+void Channel::addInvitedMember(int fd)
+{
+    if (!hasMember(fd) && !isInvited(fd))
+        invitedMembers.push_back(fd);
+}
+
+void Channel::removeInvitedMember(int fd)
+{
+    for (std::vector<int>::iterator it = invitedMembers.begin(); it != invitedMembers.end(); ++it)
+    {
+        if (*it == fd)
+        {
+            invitedMembers.erase(it);
+            return;
+        }
+    }
+}
+
+const std::vector<int> &Channel::getInvitedMembers() const
+{
+    return invitedMembers;
 }
