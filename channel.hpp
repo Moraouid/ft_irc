@@ -17,6 +17,8 @@ private:
     std::vector<int> operators;
     std::vector<int> invitedMembers;
     bool isPrivate;
+    int userLimit;
+    bool hasLimit;
 
 public:
     Channel();
@@ -37,6 +39,10 @@ public:
     void addOperator(int fd);
     void removeOperator(int fd);
     void setPrivate(bool isPrivate);
+    void setLimit(int limit);
+    void removeLimit();
+    bool hasUserLimit() const;
+    int getUserLimit() const;
     void addInvitedMember(int fd);
     void removeInvitedMember(int fd);
 

@@ -1,9 +1,9 @@
 #include "channel.hpp"
 #include "client.hpp"
 
-Channel::Channel() : name(""), topic("default topic"), isPrivate(false) {}
+Channel::Channel() : name(""), topic("default topic"), isPrivate(false), userLimit(0), hasLimit(false) {}
 
-Channel::Channel(const std::string &channelName) : name(channelName), topic("default topic"), isPrivate(false) {}
+Channel::Channel(const std::string &channelName) : name(channelName), topic("default topic"), isPrivate(false), userLimit(0), hasLimit(false) {}
 
 Channel::~Channel() {}
 
@@ -101,6 +101,31 @@ void Channel::broadcast(const std::string &message, int senderFd, std::map<int, 
 void Channel::setPrivate(bool isPrivate)
 {
     this->isPrivate = isPrivate;
+}
+
+void Channel::setLimit(int limit)
+{
+    if (limit > 0)
+    {
+        userLimit = limit;
+        hasLimit = true;
+    }
+}
+
+void Channel::removeLimit()
+{
+    userLimit = 0;
+    hasLimit = false;
+}
+
+bool Channel::hasUserLimit() const
+{
+    return hasLimit;
+}
+
+int Channel::getUserLimit() const
+{
+    return userLimit;
 }
 
 bool Channel::getIsPrivate() const

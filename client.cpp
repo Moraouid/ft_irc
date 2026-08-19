@@ -258,6 +258,11 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				appendOut(formatReply("473", nickname, channelName + " :Cannot join channel (+i)"));
 				return;
 			}
+			if (chIt->second.hasUserLimit() && (int)chIt->second.getMembers().size() >= chIt->second.getUserLimit())
+			{
+				appendOut(formatReply("471", nickname, channelName + " :Cannot join channel (+l)"));
+				return;
+			}
 			chIt->second.addMember(fd);
 			joinChannel(channelName);
 			appendOut(formatReply("353", nickname, "= " + channelName + " :@" + nickname));
@@ -332,7 +337,17 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			}
 			if (scmd->args.size() < 2)
 			{
-				std::string modes = chIt->second.getIsPrivate() ? "+i" : "";
+				std::string modes = "";
+				if (chIt->second.getIsPrivate())
+					modes += "+i";
+				if (chIt->second.hasUserLimit())
+				{
+					if (!modes.empty())
+						modes += " ";
+					std::ostringstream ms;
+					ms << "+l " << chIt->second.getUserLimit();
+					modes += ms.str();
+				}
 				appendOut(formatReply("324", nickname, channelName + " " + modes));
 				return;
 			}
@@ -353,6 +368,29 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			{
 				chIt->second.setPrivate(false);
 				appendOut(formatReply("324", nickname, channelName + " -i"));
+			}
+			else if (modeChange == "+l")
+			{
+				if (scmd->args.size() < 3)
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				std::string limitStr = scmd->args[2];
+				std::istringstream iss(limitStr);
+				int limit = 0;
+				if (!(iss >> limit) || limit <= 0)
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				chIt->second.setLimit(limit);
+				appendOut(formatReply("324", nickname, channelName + " +l " + limitStr));
+			}
+			else if (modeChange == "-l")
+			{
+				chIt->second.removeLimit();
+				appendOut(formatReply("324", nickname, channelName + " -l"));
 			}
 			else if (modeChange == "+o")
 			{
