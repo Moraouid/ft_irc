@@ -171,7 +171,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				return;
 			}
 			setPass(scmd->args[0]);
-			appendOut((std::string(":") + "irc" + " 001 " + this->getNickname() + " :Welcome to the Internet Relay Network, " + this->getNickname() + "/r/n"));
+			appendOut(formatReply("001", "*", "Password accepted"));
 		}
 		else if (scmd->cmd == "NICK")
 		{
@@ -188,10 +188,8 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 					setNickname(getNickname() + "_");
 					it = clients.begin();
 					appendOut(formatReply("433", getNickname(), "Nickname is already in use"));
-					return;
 				}
 			}
-			appendOut(formatReply("001", getNickname(), "Welcome to the Internet Relay Network"));
 		}
 		else if (scmd->cmd == "USER")
 		{
@@ -255,6 +253,11 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				chIt = channels.find(channelName);
 				chIt->second.addOperator(fd);
 			}
+			if (chIt->second.getIsPrivate() && !chIt->second.isOperator(fd) && !chIt->second.isInvited(fd))
+			{
+				appendOut(formatReply("473", nickname, channelName + " :Cannot join channel (+i)"));
+				return;
+			}
 			chIt->second.addMember(fd);
 			joinChannel(channelName);
 			appendOut(formatReply("353", nickname, "= " + channelName + " :@" + nickname));
@@ -312,6 +315,97 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			leaveChannel(channelName);
 			appendOut(formatReply("KICK", nickname, channelName + " " + memberName + " :You have been kicked from the channel"));
 			debugPrint("Client " + nickname + " kicked " + memberName + " from " + channelName);
+		}
+		else if (scmd->cmd == "MODE")
+		{
+			if (scmd->args.empty() || scmd->args[0].empty())
+			{
+				appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+				return;
+			}
+			std::string channelName = scmd->args[0];
+			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
+			if (chIt == channels.end())
+			{
+				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
+				return;
+			}
+			if (scmd->args.size() < 2)
+			{
+				std::string modes = chIt->second.getIsPrivate() ? "+i" : "";
+				appendOut(formatReply("324", nickname, channelName + " " + modes));
+				return;
+			}
+
+			if (!chIt->second.isOperator(getFd()))
+			{
+				appendOut(formatReply("482", nickname, channelName + " :You're not channel operator"));
+				return;
+			}
+
+			std::string modeChange = scmd->args[1];
+			if (modeChange == "+i")
+			{
+				chIt->second.setPrivate(true);
+				appendOut(formatReply("324", nickname, channelName + " +i"));
+			}
+			else if (modeChange == "-i")
+			{
+				chIt->second.setPrivate(false);
+				appendOut(formatReply("324", nickname, channelName + " -i"));
+			}
+			else if (modeChange == "+o")
+			{
+				if (scmd->args.size() < 3)
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				std::string targetNick = scmd->args[2];
+				for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+				{
+					if (it->second.getNickname() == targetNick)
+					{
+						if (!chIt->second.hasMember(it->first))
+						{
+							appendOut(formatReply("441", nickname, targetNick + " " + channelName + " :They aren't on that channel"));
+							return;
+						}
+						chIt->second.addOperator(it->first);
+						appendOut(formatReply("324", nickname, channelName + " +o " + targetNick));
+						return;
+					}
+				}
+				appendOut(formatReply("401", nickname, targetNick + " :No such nick"));
+			}
+			else if (modeChange == "-o")
+			{
+				if (scmd->args.size() < 3)
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				std::string targetNick = scmd->args[2];
+				for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+				{
+					if (it->second.getNickname() == targetNick)
+					{
+						if (!chIt->second.hasMember(it->first))
+						{
+							appendOut(formatReply("441", nickname, targetNick + " " + channelName + " :They aren't on that channel"));
+							return;
+						}
+						chIt->second.removeOperator(it->first);
+						appendOut(formatReply("324", nickname, channelName + " -o " + targetNick));
+						return;
+					}
+				}
+				appendOut(formatReply("401", nickname, targetNick + " :No such nick"));
+			}
+			else
+			{
+				appendOut(formatReply("472", nickname, modeChange + " :is unknown mode char to me"));
+			}
 		}
 	}
 }

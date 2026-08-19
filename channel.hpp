@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 class Client;
 
@@ -14,6 +15,8 @@ private:
     std::string topic;
     std::vector<int> members;
     std::vector<int> operators;
+    std::vector<int> invitedMembers;
+    bool isPrivate;
 
 public:
     Channel();
@@ -26,13 +29,19 @@ public:
 
     bool hasMember(int fd) const;
     bool isOperator(int fd) const;
+    bool getIsPrivate() const;
+    bool isInvited(int fd) const;
 
     void addMember(int fd);
     void removeMember(int fd);
     void addOperator(int fd);
     void removeOperator(int fd);
+    void setPrivate(bool isPrivate);
+    void addInvitedMember(int fd);
+    void removeInvitedMember(int fd);
 
     const std::vector<int> &getMembers() const;
+    const std::vector<int> &getInvitedMembers() const;
     void broadcast(const std::string &message, int senderFd, std::map<int, Client> &clients) const;
 };
 
