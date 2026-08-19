@@ -171,7 +171,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				return;
 			}
 			setPass(scmd->args[0]);
-			appendOut((std::string(":") + "irc" + " 001 " + this->getNickname() + " :Welcome to the Internet Relay Network, " + this->getNickname() + "/r/n"));
+			appendOut(formatReply("001", "*", "Password accepted"));
 		}
 		else if (scmd->cmd == "NICK")
 		{
@@ -190,7 +190,6 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 					appendOut(formatReply("433", getNickname(), "Nickname is already in use"));
 				}
 			}
-			appendOut(formatReply("001", getNickname(), "Welcome to the Internet Relay Network"));
 		}
 		else if (scmd->cmd == "USER")
 		{
@@ -354,6 +353,54 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			{
 				chIt->second.setPrivate(false);
 				appendOut(formatReply("324", nickname, channelName + " -i"));
+			}
+			else if (modeChange == "+o")
+			{
+				if (scmd->args.size() < 3)
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				std::string targetNick = scmd->args[2];
+				for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+				{
+					if (it->second.getNickname() == targetNick)
+					{
+						if (!chIt->second.hasMember(it->first))
+						{
+							appendOut(formatReply("441", nickname, targetNick + " " + channelName + " :They aren't on that channel"));
+							return;
+						}
+						chIt->second.addOperator(it->first);
+						appendOut(formatReply("324", nickname, channelName + " +o " + targetNick));
+						return;
+					}
+				}
+				appendOut(formatReply("401", nickname, targetNick + " :No such nick"));
+			}
+			else if (modeChange == "-o")
+			{
+				if (scmd->args.size() < 3)
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				std::string targetNick = scmd->args[2];
+				for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+				{
+					if (it->second.getNickname() == targetNick)
+					{
+						if (!chIt->second.hasMember(it->first))
+						{
+							appendOut(formatReply("441", nickname, targetNick + " " + channelName + " :They aren't on that channel"));
+							return;
+						}
+						chIt->second.removeOperator(it->first);
+						appendOut(formatReply("324", nickname, channelName + " -o " + targetNick));
+						return;
+					}
+				}
+				appendOut(formatReply("401", nickname, targetNick + " :No such nick"));
 			}
 			else
 			{
