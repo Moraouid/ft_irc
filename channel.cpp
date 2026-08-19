@@ -1,9 +1,9 @@
 #include "channel.hpp"
 #include "client.hpp"
 
-Channel::Channel() : name(""), topic("default topic"), isPrivate(false), userLimit(0), hasLimit(false) {}
+Channel::Channel() : name(""), topic("default topic"), isPrivate(false), isLocked(false), userLimit(0), hasLimit(false) {}
 
-Channel::Channel(const std::string &channelName) : name(channelName), topic("default topic"), isPrivate(false), userLimit(0), hasLimit(false) {}
+Channel::Channel(const std::string &channelName) : name(channelName), topic("default topic"), isPrivate(false), isLocked(false), userLimit(0), hasLimit(false) {}
 
 Channel::~Channel() {}
 
@@ -20,6 +20,23 @@ const std::string &Channel::getTopic() const
 void Channel::setTopic(const std::string &newTopic)
 {
     topic = newTopic;
+}
+
+const std::string &Channel::getKey() const
+{
+    return Key;
+}
+
+void Channel::setKey(const std::string &newKey)
+{
+    Key = newKey;
+    isLocked = true;
+}
+
+void Channel::removeKey()
+{
+    Key.clear();
+    isLocked = false;
 }
 
 bool Channel::hasMember(int fd) const
@@ -160,3 +177,14 @@ const std::vector<int> &Channel::getInvitedMembers() const
 {
     return invitedMembers;
 }
+
+bool Channel::getIsLocked() const
+{
+    return isLocked;
+}
+
+void Channel::setLocked(bool isLocked)
+{
+    this->isLocked = isLocked;
+}
+
