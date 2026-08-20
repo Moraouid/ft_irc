@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/14 03:19:07 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/16 21:52:04 by sfaouzi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include <map>
 #include <exception>
 #include "client.hpp"
+#include "channel.hpp"
 #include <signal.h>
 
 //class Client
@@ -52,6 +53,7 @@ class Server
         int port_number;
         std::string password;
         std::map<int, Client> clients;
+        std::map<std::string, Channel> channels;
         std::vector<struct pollfd> poll_fds;
         int listening_fd;
         std::string buffer;
@@ -71,9 +73,13 @@ class Server
         void init_connection();
         void run_server();
         void handle_connection();
-        int handle_arriving_data(size_t *i);    
+        int handle_arriving_data(size_t *i);
         int handle_sending_data(size_t *i);
         void close_connection(size_t *i);
+        Channel *getChannel(const std::string &channelName);
+        bool createChannel(const std::string &channelName);
+        void joinChannel(int clientFd, const std::string &channelName);
+        void partChannel(int clientFd, const std::string &channelName);
         void clear_server();
 };
 

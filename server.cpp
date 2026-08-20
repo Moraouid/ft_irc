@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/14 03:17:54 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/16 21:52:04 by sfaouzi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,12 +16,10 @@ extern int is_run;
 
 Server::Server()
 {
-
 }
 
-Server::Server(int port_num, std::string pass): port_number(port_num), password(pass)
+Server::Server(int port_num, std::string pass) : port_number(port_num), password(pass)
 {
-
 }
 
 Server::server_errors::server_errors()
@@ -34,22 +32,20 @@ Server::server_errors::server_errors(std::string msg)
     this->msg = msg;
 }
 
-
-const char* Server::server_errors::what() throw()
+const char *Server::server_errors::what() throw()
 {
     return msg.c_str();
 }
 
 Server::server_errors::~server_errors() throw()
 {
-
 }
 
 void Server::handle_connection()
 {
     int connect_fd = accept(listening_fd, NULL, NULL);
     if (connect_fd == -1)
-        return ;
+        return;
 
     struct pollfd new_clt;
 
@@ -57,7 +53,7 @@ void Server::handle_connection()
     new_clt.events = POLLIN;
     new_clt.revents = 0;
     poll_fds.push_back(new_clt);
-    
+
     std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd, ""));
     clients.insert(cl);
     fcntl(connect_fd, F_SETFL, O_NONBLOCK);
@@ -75,16 +71,21 @@ int Server::handle_arriving_data(size_t *i)
         std::string cmd;
         while ((delim = clients[poll_fds[*i].fd].getInBuffer().find("\n")) != std::string::npos)
         {
+            c_cmd scmd;
+            scmd.cmd.clear();
+            scmd.args.clear();
             if (delim + 1 > 512)
                 cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, 510);
             else
                 cmd = clients[poll_fds[*i].fd].getInBuffer().substr(0, delim);
-            clients[poll_fds[*i].fd].getInBuffer().erase(0, delim+1);
+            clients[poll_fds[*i].fd].getInBuffer().erase(0, delim + 1);
             if (!cmd.empty() && cmd[cmd.size() - 1] == '\r')
                 cmd.erase(cmd.size() - 1);
             if (!cmd.empty())
             {
                 std::cout << cmd << std::endl;
+                clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
+                clients[poll_fds[*i].fd].handleCommand(&scmd, password, clients, channels);
                 // parsing and executing logic
             }
         }
@@ -99,7 +100,7 @@ int Server::handle_sending_data(size_t *i)
 {
     int s_ret;
     std::string buff = clients[poll_fds[*i].fd].getOutBuffer().c_str();
-    s_ret = send(poll_fds[*i].fd,  buff.c_str(), buff.size(), 0);
+    s_ret = send(poll_fds[*i].fd, buff.c_str(), buff.size(), 0);
     if (s_ret > 0)
         clients[poll_fds[*i].fd].getOutBuffer().erase(0, s_ret);
     else
@@ -121,7 +122,7 @@ void Server::close_connection(size_t *i)
     poll_fds.erase(poll_fds.begin() + *i);
 
     std::cout << "client " << fd << " disconnected" << std::endl;
-    i--;
+    (*i)--;
 }
 
 void Server::run_server()
@@ -152,8 +153,8 @@ void Server::run_server()
                 }
                 if (poll_fds[i].revents & POLLOUT)
                 {
-                        if (!handle_sending_data(&i))
-                            continue;
+                    if (!handle_sending_data(&i))
+                        continue;
                 }
                 if (poll_fds[i].revents & (POLLHUP | POLLERR))
                     close_connection(&i);
@@ -169,9 +170,10 @@ void Server::init_connection()
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(6667);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
+    password = "pass";
 
     int opt = 1;
-    listening_fd  = socket(AF_INET, SOCK_STREAM, 0);
+    listening_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (listening_fd < 0)
         throw Server::server_errors("cannot create socket");
     if (setsockopt(listening_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
@@ -186,6 +188,44 @@ void Server::init_connection()
     listen_poll_fd.revents = 0;
     poll_fds.push_back(listen_poll_fd);
     fcntl(listening_fd, F_SETFL, O_NONBLOCK);
+}
+
+Channel *Server::getChannel(const std::string &channelName)
+{
+    std::map<std::string, Channel>::iterator it = channels.find(channelName);
+    if (it == channels.end())
+        return NULL;
+    return &it->second;
+}
+
+bool Server::createChannel(const std::string &channelName)
+{
+    if (channels.find(channelName) != channels.end())
+        return false;
+    channels.insert(std::make_pair(channelName, Channel(channelName)));
+    return true;
+}
+
+void Server::joinChannel(int clientFd, const std::string &channelName)
+{
+    std::map<std::string, Channel>::iterator it = channels.find(channelName);
+    if (it == channels.end())
+        return;
+    it->second.addMember(clientFd);
+    std::map<int, Client>::iterator clientIt = clients.find(clientFd);
+    if (clientIt != clients.end())
+        clientIt->second.joinChannel(channelName);
+}
+
+void Server::partChannel(int clientFd, const std::string &channelName)
+{
+    std::map<std::string, Channel>::iterator it = channels.find(channelName);
+    if (it == channels.end())
+        return;
+    it->second.removeMember(clientFd);
+    std::map<int, Client>::iterator clientIt = clients.find(clientFd);
+    if (clientIt != clients.end())
+        clientIt->second.leaveChannel(channelName);
 }
 
 void Server::clear_server()
