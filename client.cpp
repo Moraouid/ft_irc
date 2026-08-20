@@ -12,11 +12,16 @@ namespace
 		return ":" + nickname + "!" + username + "@localhost PRIVMSG " + target + " :" + text + "\r\n";
 	}
 
-	std::string formatKick(const Client &sender, const std::string &channelName, const std::string &memberName, const std::string &reason)
+	std::string formatInvite(const Client &sender, const std::string &target, const std::string &channelName)
 	{
 		std::string nickname = sender.getNickname().empty() ? "*" : sender.getNickname();
 		std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
-		return ":" + nickname + "!" + username + "@localhost KICK " + channelName + " " + memberName + " :" + reason + "\r\n";
+		return ":" + nickname + "!" + username + "@localhost INVITE " + target + " :" + channelName + "\r\n";
+	}
+
+	std::string formatInviteReply(const std::string &serverName, const std::string &nickname, const std::string &targetNick, const std::string &channelName)
+	{
+		return ":" + serverName + " 341 " + nickname + " " + targetNick + " " + channelName + "\r\n";
 	}
 
 	std::string formatNotice(const std::string &target, const std::string &message)
@@ -294,10 +299,63 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				return;
 			}
 			chIt->second.addMember(fd);
+			chIt->second.removeInvitedMember(fd);
 			joinChannel(channelName);
+			std::string joinMessage = ":" + nickname + "!" + username + "@localhost JOIN :" + channelName + "\r\n";
+			for (std::vector<int>::const_iterator it = chIt->second.getMembers().begin(); it != chIt->second.getMembers().end(); ++it)
+			{
+				if (*it == fd)
+					continue;
+				std::map<int, Client>::iterator clientIt = clients.find(*it);
+				if (clientIt != clients.end())
+					clientIt->second.appendOut(joinMessage);
+			}
+			appendOut(joinMessage);
 			appendOut(formatReply("353", nickname, "= " + channelName + " :@" + nickname));
 			appendOut(formatReply("366", nickname, channelName + " :End of NAMES list"));
 			debugPrint("Client " + nickname + " joined " + channelName);
+		}
+		else if (scmd->cmd == "INVITE")
+		{
+			if (scmd->args.size() < 2)
+			{
+				appendOut(formatReply("461", nickname, "INVITE :Not enough parameters"));
+				return;
+			}
+			std::string targetNick = scmd->args[0];
+			std::string channelName = scmd->args[1];
+			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
+			if (chIt == channels.end())
+			{
+				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
+				return;
+			}
+			if (!chIt->second.hasMember(fd))
+			{
+				appendOut(formatReply("442", nickname, channelName + " :You're not on that channel"));
+				return;
+			}
+			if (!chIt->second.isOperator(fd))
+			{
+				appendOut(formatReply("482", nickname, channelName + " :You're not channel operator"));
+				return;
+			}
+			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+			{
+				if (it->second.getNickname() == targetNick)
+				{
+					if (chIt->second.hasMember(it->first))
+					{
+						appendOut(formatReply("443", nickname, targetNick + " " + channelName + " :is already on channel"));
+						return;
+					}
+					chIt->second.addInvitedMember(it->first);
+					appendOut(formatInviteReply("irc", nickname, targetNick, channelName));
+					it->second.appendOut(formatInvite(*this, targetNick, channelName));
+					return;
+				}
+			}
+			appendOut(formatReply("401", nickname, targetNick + " :No such nick"));
 		}
 		else if (scmd->cmd == "TOPIC")
 		{
@@ -330,26 +388,6 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			}
 			else
 				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
-		}
-		else if (scmd->cmd == "KICK")
-		{
-			if (scmd->args.empty() || scmd->args[0].empty())
-			{
-				appendOut(formatReply("461", nickname, "KICK :Not enough parameters"));
-				return;
-			}
-			std::string channelName = scmd->args[0];
-			std::string memberName = scmd->args[1];
-			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
-			if (chIt == channels.end())
-			{
-				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
-				return;
-			}
-			chIt->second.removeMember(fd);
-			leaveChannel(channelName);
-			appendOut(formatKick(*this, channelName, memberName, "You have been kicked from the channel"));
-			debugPrint("Client " + nickname + " kicked " + memberName + " from " + channelName);
 		}
 		else if (scmd->cmd == "MODE")
 		{

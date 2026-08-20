@@ -6,6 +6,7 @@
 #define RPL_CREATED "003"
 #define RPL_MYINFO "004"
 #define RPL_TOPIC "332"
+#define RPL_INVITING "341"
 #define RPL_NAMREPLY "353"
 #define RPL_ENDOFNAMES "366"
 
