@@ -1,6 +1,34 @@
 #include "client.hpp"
+#include "replies.hpp"
 
 #include <sstream>
+
+namespace
+{
+	std::string formatPrivmsg(const Client &sender, const std::string &target, const std::string &text)
+	{
+		std::string nickname = sender.getNickname().empty() ? "*" : sender.getNickname();
+		std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
+		return ":" + nickname + "!" + username + "@localhost PRIVMSG " + target + " :" + text + "\r\n";
+	}
+
+	std::string formatInvite(const Client &sender, const std::string &target, const std::string &channelName)
+	{
+		std::string nickname = sender.getNickname().empty() ? "*" : sender.getNickname();
+		std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
+		return ":" + nickname + "!" + username + "@localhost INVITE " + target + " :" + channelName + "\r\n";
+	}
+
+	std::string formatInviteReply(const std::string &serverName, const std::string &nickname, const std::string &targetNick, const std::string &channelName)
+	{
+		return ":" + serverName + " 341 " + nickname + " " + targetNick + " " + channelName + "\r\n";
+	}
+
+	std::string formatNotice(const std::string &target, const std::string &message)
+	{
+		return ":irc NOTICE " + target + " :" + message + "\r\n";
+	}
+}
 
 Client::Client()
 {
@@ -154,7 +182,6 @@ void Client::parseCommand(std::string cmd, c_cmd *scmd)
 	}
 }
 
-
 void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Client> &clients, std::map<std::string, Channel> &channels)
 {
 	std::ostringstream oss;
@@ -199,7 +226,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				return;
 			}
 			setUsername(scmd->args[0]);
-			appendOut("Username set successfully.\n");
+			appendOut(formatNotice(nickname, "Username set successfully."));
 		}
 		else
 		{
@@ -214,7 +241,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 		if (scmd->cmd == "PRIVMSG" && scmd->args.size() >= 2)
 		{
 			std::string target = scmd->args[0];
-			std::string message = "Message from " + getNickname() + ": " + scmd->args[1] + "\n";
+			std::string message = formatPrivmsg(*this, target, scmd->args[1]);
 
 			if (target[0] == '#')
 			{
@@ -253,22 +280,88 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				chIt = channels.find(channelName);
 				chIt->second.addOperator(fd);
 			}
+			if (chIt->second.getIsLocked())
+			{
+				if (scmd->args.size() < 2 || scmd->args[1] != chIt->second.getKey())
+				{
+					appendOut(formatReply(ERR_BADCHANNELKEY, nickname, channelName + " :Cannot join channel (+k)"));
+					return;
+				}
+			}
 			if (chIt->second.getIsPrivate() && !chIt->second.isOperator(fd) && !chIt->second.isInvited(fd))
 			{
-				appendOut(formatReply("473", nickname, channelName + " :Cannot join channel (+i)"));
+				appendOut(errInviteOnlyChan("irc", nickname, channelName));
+				return;
+			}
+			if (chIt->second.hasUserLimit() && (int)chIt->second.getMembers().size() >= chIt->second.getUserLimit())
+			{
+				appendOut(errChannelIsFull("irc", nickname, channelName));
 				return;
 			}
 			chIt->second.addMember(fd);
+			chIt->second.removeInvitedMember(fd);
 			joinChannel(channelName);
+			std::string joinMessage = rplJoin(nickname, username, "localhost", channelName);
+			for (std::vector<int>::const_iterator it = chIt->second.getMembers().begin(); it != chIt->second.getMembers().end(); ++it)
+			{
+				if (*it == fd)
+					continue;
+				std::map<int, Client>::iterator clientIt = clients.find(*it);
+				if (clientIt != clients.end())
+					clientIt->second.appendOut(joinMessage);
+			}
+			appendOut(joinMessage);
 			appendOut(formatReply("353", nickname, "= " + channelName + " :@" + nickname));
 			appendOut(formatReply("366", nickname, channelName + " :End of NAMES list"));
 			debugPrint("Client " + nickname + " joined " + channelName);
+		}
+		else if (scmd->cmd == "INVITE")
+		{
+			if (scmd->args.size() < 2)
+			{
+				appendOut(formatReply("461", nickname, "INVITE :Not enough parameters"));
+				return;
+			}
+			std::string targetNick = scmd->args[0];
+			std::string channelName = scmd->args[1];
+			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
+			if (chIt == channels.end())
+			{
+				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
+				return;
+			}
+			if (!chIt->second.hasMember(fd))
+			{
+				appendOut(formatReply("442", nickname, channelName + " :You're not on that channel"));
+				return;
+			}
+			if (!chIt->second.isOperator(fd))
+			{
+				appendOut(formatReply("482", nickname, channelName + " :You're not channel operator"));
+				return;
+			}
+			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+			{
+				if (it->second.getNickname() == targetNick)
+				{
+					if (chIt->second.hasMember(it->first))
+					{
+						appendOut(formatReply("443", nickname, targetNick + " " + channelName + " :is already on channel"));
+						return;
+					}
+					chIt->second.addInvitedMember(it->first);
+					appendOut(rplInviting("irc", nickname, channelName, targetNick));
+					it->second.appendOut(inviteMsg(nickname, username, "localhost", targetNick, channelName));
+					return;
+				}
+			}
+			appendOut(formatReply("401", nickname, targetNick + " :No such nick"));
 		}
 		else if (scmd->cmd == "TOPIC")
 		{
 			if (scmd->args.size() < 2)
 			{
-				if(scmd->args.size() == 1)
+				if (scmd->args.size() == 1)
 				{
 					std::string channelName = scmd->args[0];
 					std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
@@ -296,26 +389,6 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			else
 				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
 		}
-		else if (scmd->cmd == "KICK")
-		{
-			if (scmd->args.empty() || scmd->args[0].empty())
-			{
-				appendOut(formatReply("461", nickname, "KICK :Not enough parameters"));
-				return;
-			}
-			std::string channelName = scmd->args[0];
-			std::string memberName = scmd->args[1];
-			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
-			if (chIt == channels.end())
-			{
-				appendOut(formatReply("403", nickname, channelName + " :No such channel"));
-				return;
-			}
-			chIt->second.removeMember(fd);
-			leaveChannel(channelName);
-			appendOut(formatReply("KICK", nickname, channelName + " " + memberName + " :You have been kicked from the channel"));
-			debugPrint("Client " + nickname + " kicked " + memberName + " from " + channelName);
-		}
 		else if (scmd->cmd == "MODE")
 		{
 			if (scmd->args.empty() || scmd->args[0].empty())
@@ -332,7 +405,23 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			}
 			if (scmd->args.size() < 2)
 			{
-				std::string modes = chIt->second.getIsPrivate() ? "+i" : "";
+				std::string modes = "";
+				if (chIt->second.getIsPrivate())
+					modes += "+i";
+				if (chIt->second.hasUserLimit())
+				{
+					if (!modes.empty())
+						modes += " ";
+					std::ostringstream ms;
+					ms << "+l " << chIt->second.getUserLimit();
+					modes += ms.str();
+				}
+				if (chIt->second.getIsLocked())
+				{
+					if (!modes.empty())
+						modes += " ";
+					modes += "+k";
+				}
 				appendOut(formatReply("324", nickname, channelName + " " + modes));
 				return;
 			}
@@ -353,6 +442,44 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			{
 				chIt->second.setPrivate(false);
 				appendOut(formatReply("324", nickname, channelName + " -i"));
+			}
+			else if (modeChange == "+l")
+			{
+				if (scmd->args.size() < 3)
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				std::string limitStr = scmd->args[2];
+				std::istringstream iss(limitStr);
+				int limit = 0;
+				if (!(iss >> limit) || limit <= 0)
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				chIt->second.setLimit(limit);
+				appendOut(formatReply("324", nickname, channelName + " +l " + limitStr));
+			}
+			else if (modeChange == "-l")
+			{
+				chIt->second.removeLimit();
+				appendOut(formatReply("324", nickname, channelName + " -l"));
+			}
+			else if (modeChange == "+k")
+			{
+				if (scmd->args.size() < 3 || scmd->args[2].empty())
+				{
+					appendOut(formatReply("461", nickname, "MODE :Not enough parameters"));
+					return;
+				}
+				chIt->second.setKey(scmd->args[2]);
+				appendOut(formatReply("324", nickname, channelName + " +k"));
+			}
+			else if (modeChange == "-k")
+			{
+				chIt->second.removeKey();
+				appendOut(formatReply("324", nickname, channelName + " -k"));
 			}
 			else if (modeChange == "+o")
 			{
