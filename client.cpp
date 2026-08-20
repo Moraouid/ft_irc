@@ -290,18 +290,18 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			}
 			if (chIt->second.getIsPrivate() && !chIt->second.isOperator(fd) && !chIt->second.isInvited(fd))
 			{
-				appendOut(formatReply("473", nickname, channelName + " :Cannot join channel (+i)"));
+				appendOut(errInviteOnlyChan("irc", nickname, channelName));
 				return;
 			}
 			if (chIt->second.hasUserLimit() && (int)chIt->second.getMembers().size() >= chIt->second.getUserLimit())
 			{
-				appendOut(formatReply("471", nickname, channelName + " :Cannot join channel (+l)"));
+				appendOut(errChannelIsFull("irc", nickname, channelName));
 				return;
 			}
 			chIt->second.addMember(fd);
 			chIt->second.removeInvitedMember(fd);
 			joinChannel(channelName);
-			std::string joinMessage = ":" + nickname + "!" + username + "@localhost JOIN :" + channelName + "\r\n";
+			std::string joinMessage = rplJoin(nickname, username, "localhost", channelName);
 			for (std::vector<int>::const_iterator it = chIt->second.getMembers().begin(); it != chIt->second.getMembers().end(); ++it)
 			{
 				if (*it == fd)
@@ -350,8 +350,8 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 						return;
 					}
 					chIt->second.addInvitedMember(it->first);
-					appendOut(formatInviteReply("irc", nickname, targetNick, channelName));
-					it->second.appendOut(formatInvite(*this, targetNick, channelName));
+					appendOut(rplInviting("irc", nickname, channelName, targetNick));
+					it->second.appendOut(inviteMsg(nickname, username, "localhost", targetNick, channelName));
 					return;
 				}
 			}
