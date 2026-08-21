@@ -83,7 +83,6 @@ int Server::handle_arriving_data(size_t *i)
                 cmd.erase(cmd.size() - 1);
             if (!cmd.empty())
             {
-                std::cout << cmd << std::endl;
                 clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
                 clients[poll_fds[*i].fd].handleCommand(&scmd, password, clients, channels);
                 // parsing and executing logic
