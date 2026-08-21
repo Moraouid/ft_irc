@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/16 21:52:04 by sfaouzi          ###   ########.fr       */
+/*   Updated: 2026/08/21 03:09:27 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -182,12 +182,21 @@ void Server::init_connection()
         throw Server::server_errors("cannot bind the socket");
     if (listen(listening_fd, 1) < 0)
         throw Server::server_errors("listen failed");
+
     struct pollfd listen_poll_fd;
     listen_poll_fd.fd = listening_fd;
     listen_poll_fd.events = POLLIN;
     listen_poll_fd.revents = 0;
     poll_fds.push_back(listen_poll_fd);
     fcntl(listening_fd, F_SETFL, O_NONBLOCK);
+
+    Client bot_clt(-1, "");
+    bot_clt.setNickname("loffi");
+    bot_clt.setUsername("bot");
+    bot_clt.setPass(password);
+    bot_clt.setState();
+
+    clients[-1] = bot_clt;
 }
 
 Channel *Server::getChannel(const std::string &channelName)

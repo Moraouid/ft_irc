@@ -1,5 +1,6 @@
 #include "client.hpp"
 #include "replies.hpp"
+#include "Bot.hpp"
 
 #include <sstream>
 
@@ -234,7 +235,11 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 		}
 		setState();
 		if (getState() == REGISTERED)
+		{
 			appendOut(formatReply("001", nickname, "Welcome to the Internet Relay Network"));
+			std::string bot_msg = ":loffi!bot@localhost PRIVMSG " + nickname + " :Hello! I am loffi, the server bot. send !help for showing commands!\r\n";
+			appendOut(bot_msg);
+		}
 	}
 	else
 	{
@@ -255,6 +260,14 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				return;
 			}
 
+			if (target == "loffi")
+			{
+				Bot bot;
+				std::string bot_response = bot.bot_handle(scmd->args[1], nickname, clients.size() -1);
+				std::string bot_msg = ":loffi!bot@localhost PRIVMSG " + nickname + " :" + bot_response + "\r\n";
+				appendOut(bot_msg);
+				return ;
+			}
 			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 			{
 				if (it->second.getNickname() == target)
