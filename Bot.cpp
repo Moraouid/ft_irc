@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Bot.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
+/*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/08/21 03:36:55 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/21 04:33:27 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/22 18:02:26 by sfaouzi          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,11 +15,15 @@
 
 std::string Bot::help_cmd(std::string nickname, int user_count)
 {
+    (void)nickname;
+    (void)user_count;
     return "availble commands: !help, !time, !users";
 }
 
 std::string Bot::time_cmd(std::string nickname, int user_count)
 {
+    (void)nickname;
+    (void)user_count;
     std::time_t cr_time = time(NULL);
 
     std::string str_time(std::ctime(&cr_time));
@@ -29,6 +33,7 @@ std::string Bot::time_cmd(std::string nickname, int user_count)
 
 std::string Bot::users_cmd(std::string nickname, int user_count)
 {
+	(void)nickname;
     std::stringstream str_stream;
 
     str_stream << user_count;

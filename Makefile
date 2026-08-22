@@ -1,7 +1,7 @@
 NAME = ft_irc
 CXX = c++
 
-CXXFLAGS = -std=c++98
+CXXFLAGS = -Werror -Wextra -Wall -std=c++98
 SRCS = main.cpp server.cpp client.cpp channel.cpp irc_utils.cpp Bot.cpp
 
 OBJS = $(SRCS:.cpp=.o)

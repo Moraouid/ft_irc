@@ -8,6 +8,8 @@ std::vector<std::string> splitString(const std::string &input, const std::string
 std::string generateTimestamp();
 void debugPrint(const std::string &message);
 std::string formatReply(const std::string &code, const std::string &nickname, const std::string &message);
+std::string formatPrivmsg(const std::string &nickname, const std::string &username, const std::string &target, const std::string &text);
+std::string formatNotice(const std::string &target, const std::string &message);
 
 std::string rplWelcome(const std::string &serverName, const std::string &nickname);
 std::string rplTopic(const std::string &serverName, const std::string &nickname, const std::string &channel, const std::string &topic);
