@@ -315,16 +315,28 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			chIt->second.removeInvitedMember(fd);
 			joinChannel(channelName);
 			std::string joinMessage = rplJoin(nickname, username, "localhost", channelName);
+			std::string namesList;
+			for (std::vector<int>::const_iterator it = chIt->second.getMembers().begin(); it != chIt->second.getMembers().end(); ++it)
+			{
+				std::map<int, Client>::iterator clientIt = clients.find(*it);
+				if (clientIt == clients.end())
+					continue;
+				if (!namesList.empty())
+					namesList += " ";
+				if (chIt->second.isOperator(*it))
+					namesList += "@";
+				namesList += clientIt->second.getNickname();
+			}
 			for (std::vector<int>::const_iterator it = chIt->second.getMembers().begin(); it != chIt->second.getMembers().end(); ++it)
 			{
 				if (*it == fd)
 					continue;
 				std::map<int, Client>::iterator clientIt = clients.find(*it);
 				if (clientIt != clients.end())
-					clientIt->second.appendOut(joinMessage);
+				clientIt->second.appendOut(joinMessage);
 			}
 			appendOut(joinMessage);
-			appendOut(formatReply("353", nickname, "= " + channelName + " :@" + nickname));
+			appendOut(formatReply("353", nickname, "= " + channelName + " :" + namesList));
 			appendOut(formatReply("366", nickname, channelName + " :End of NAMES list"));
 			debugPrint("Client " + nickname + " joined " + channelName);
 		}
