@@ -407,6 +407,10 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 				// remove target from channel and notify
 				chIt->second.removeMember(targetFd);
 				clients[targetFd].leaveChannel(channelName);
+				if(chIt->second.getMembers().empty())
+				{
+					channels.erase(chIt);
+				}
 				std::string kickMsg = ":" + nickname + "!" + username + "@localhost KICK " + channelName + " " + targetNick + " :" + reason + "\r\n";
 				// send to kicked user
 				clients[targetFd].appendOut(kickMsg);
