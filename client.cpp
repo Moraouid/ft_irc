@@ -4,32 +4,7 @@
 
 #include <sstream>
 
-namespace
-{
-	std::string formatPrivmsg(const Client &sender, const std::string &target, const std::string &text)
-	{
-		std::string nickname = sender.getNickname().empty() ? "*" : sender.getNickname();
-		std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
-		return ":" + nickname + "!" + username + "@localhost PRIVMSG " + target + " :" + text + "\r\n";
-	}
 
-	std::string formatInvite(const Client &sender, const std::string &target, const std::string &channelName)
-	{
-		std::string nickname = sender.getNickname().empty() ? "*" : sender.getNickname();
-		std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
-		return ":" + nickname + "!" + username + "@localhost INVITE " + target + " :" + channelName + "\r\n";
-	}
-
-	std::string formatInviteReply(const std::string &serverName, const std::string &nickname, const std::string &targetNick, const std::string &channelName)
-	{
-		return ":" + serverName + " 341 " + nickname + " " + targetNick + " " + channelName + "\r\n";
-	}
-
-	std::string formatNotice(const std::string &target, const std::string &message)
-	{
-		return ":irc NOTICE " + target + " :" + message + "\r\n";
-	}
-}
 
 Client::Client()
 {
@@ -246,7 +221,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 		if (scmd->cmd == "PRIVMSG" && scmd->args.size() >= 2)
 		{
 			std::string target = scmd->args[0];
-			std::string message = formatPrivmsg(*this, target, scmd->args[1]);
+			std::string message = formatPrivmsg(nickname, username, target, scmd->args[1]);
 
 			if (target[0] == '#')
 			{

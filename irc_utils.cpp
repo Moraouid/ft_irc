@@ -41,6 +41,16 @@ std::string formatReply(const std::string &code, const std::string &nickname, co
     return std::string(":irc ") + code + " " + nickname + " " + message + "\r\n";
 }
 
+std::string formatPrivmsg(const std::string &nickname, const std::string &username, const std::string &target, const std::string &text)
+{
+    return ":" + nickname + "!" + username + "@localhost PRIVMSG " + target + " :" + text + "\r\n";
+}
+
+std::string formatNotice(const std::string &target, const std::string &message)
+{
+    return ":irc NOTICE " + target + " :" + message + "\r\n";
+}
+
 std::string rplWelcome(const std::string &serverName, const std::string &nickname)
 {
     return ":" + serverName + " 001 " + nickname + " :Welcome to the Internet Relay Network, " + nickname + "\r\n";
