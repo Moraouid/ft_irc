@@ -189,7 +189,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 		else if (scmd->cmd == "KICK")
 			handleKickCommand(*this, *scmd, clients, channels);
 		else if (scmd->cmd == "TOPIC")
-			handleTopicCommand(*this, *scmd, channels);
+			handleTopicCommand(*this, *scmd, clients, channels);
 		else if (scmd->cmd == "MODE")
 			handleModeCommand(*this, *scmd, clients, channels);
 		else

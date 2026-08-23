@@ -14,6 +14,7 @@ std::string setNickname(const std::string &oldNick, const std::string &newNick, 
 
 std::string rplWelcome(const std::string &serverName, const std::string &nickname);
 std::string rplTopic(const std::string &serverName, const std::string &nickname, const std::string &channel, const std::string &topic);
+std::string rplTopicChanged(const std::string &nickname, const std::string &username, const std::string &channelName, const std::string &topic);
 std::string rplInviting(const std::string &serverName, const std::string &nickname, const std::string &channel, const std::string &targetNick);
 std::string inviteMsg(const std::string &nickname, const std::string &username, const std::string &ipAddress, const std::string &targetNick, const std::string &channelName);
 std::string rplJoin(const std::string &nickname, const std::string &username, const std::string &ipAddress, const std::string &channelName);

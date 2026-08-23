@@ -15,7 +15,7 @@ void handlePrivmsgCommand(Client &client, const c_cmd &scmd, std::map<int, Clien
 void handleJoinCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels);
 void handleInvitCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels);
 void handleKickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels);
-void handleTopicCommand(Client &client, const c_cmd &scmd, std::map<std::string, Channel> &channels);
+void handleTopicCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels);
 void handleModeCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels);
 
 #endif

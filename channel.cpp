@@ -1,9 +1,9 @@
 #include "channel.hpp"
 #include "client.hpp"
 
-Channel::Channel() : name(""), topic("default topic"), isPrivate(false), isLocked(false), userLimit(0), hasLimit(false) {}
+Channel::Channel() : name(""), topic(""), isPrivate(false), isLocked(false), userLimit(0), hasLimit(false) {}
 
-Channel::Channel(const std::string &channelName) : name(channelName), topic("default topic"), isPrivate(false), isLocked(false), userLimit(0), hasLimit(false) {}
+Channel::Channel(const std::string &channelName) : name(channelName), topic(""), isPrivate(false), isLocked(false), userLimit(0), hasLimit(false) {}
 
 Channel::~Channel() {}
 
