@@ -150,3 +150,13 @@ std::string errUserNotOnChannel(const std::string &serverName, const std::string
 {
 	return ":" + serverName + " 441 " + nickname + " " + targetNick + " " + channelName + " :They aren't on that channel\r\n";
 }
+
+std::string setNickname(const std::string &oldNick, const std::string &newNick, const std::string &username)
+{
+	return ":" + oldNick + "!" + username + "@localhost NICK :" + newNick + "\r\n";
+}
+
+std::string errUnknownCommand(const std::string &serverName, const std::string &nickname, const std::string &command)
+{
+	return ":" + serverName + " 421 " + nickname + " " + command + " :Unknown command\r\n";
+}

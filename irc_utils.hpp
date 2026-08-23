@@ -10,12 +10,14 @@ void debugPrint(const std::string &message);
 std::string formatReply(const std::string &code, const std::string &nickname, const std::string &message);
 std::string formatPrivmsg(const std::string &nickname, const std::string &username, const std::string &target, const std::string &text);
 std::string formatNotice(const std::string &target, const std::string &message);
+std::string setNickname(const std::string &oldNick, const std::string &newNick, const std::string &username);
 
 std::string rplWelcome(const std::string &serverName, const std::string &nickname);
 std::string rplTopic(const std::string &serverName, const std::string &nickname, const std::string &channel, const std::string &topic);
 std::string rplInviting(const std::string &serverName, const std::string &nickname, const std::string &channel, const std::string &targetNick);
 std::string inviteMsg(const std::string &nickname, const std::string &username, const std::string &ipAddress, const std::string &targetNick, const std::string &channelName);
 std::string rplJoin(const std::string &nickname, const std::string &username, const std::string &ipAddress, const std::string &channelName);
+std::string rplChannelMode(const std::string &serverName, const std::string &nickname, const std::string &channelName, const std::string &modes);
 std::string errNeedMoreParams(const std::string &serverName, const std::string &nickname, const std::string &command);
 std::string errInviteOnlyChan(const std::string &serverName, const std::string &nickname, const std::string &channelName);
 std::string errNoSuchChannel(const std::string &serverName, const std::string &nickname, const std::string &channelName);
@@ -30,6 +32,6 @@ std::string errUnknownMode(const std::string &serverName, const std::string &nic
 std::string errNicknameInUse(const std::string &serverName, const std::string &nickname, const std::string &targetNick);
 std::string errNotRegistered(const std::string &serverName, const std::string &nickname);
 std::string errPasswdMismatch(const std::string &serverName, const std::string &nickname);
-std::string rplChannelMode(const std::string &serverName, const std::string &nickname, const std::string &channelName, const std::string &modes);
+std::string errUnknownCommand(const std::string &serverName, const std::string &nickname, const std::string &command);
 
 #endif

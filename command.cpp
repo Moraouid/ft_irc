@@ -18,6 +18,7 @@ void handleNickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 		client.appendOut(errNeedMoreParams("irc", "*", "NICK"));
 		return;
 	}
+	std::string oldNick = client.getNickname();
 	client.setNickname(scmd.args[0]);
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 	{
@@ -28,6 +29,10 @@ void handleNickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 			client.appendOut(errNicknameInUse("irc", "*", client.getNickname()));
 		}
 	}
+	if (oldNick.empty())
+		client.appendOut(formatNotice(client.getNickname(), "Nickname set successfully."));
+	else
+		client.appendOut(setNickname(oldNick, client.getNickname(), client.getUsername()));
 }
 
 void handleUserCommand(Client &client, const c_cmd &scmd)
@@ -445,4 +450,6 @@ void handleModeCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 		modePlusoCommadd(client, scmd, clients, chIt, channelName);
 	else if (modeChange == "-o")
 		modeMinusoCommadd(client, scmd, clients, chIt, channelName);
+	else
+		client.appendOut(errUnknownMode("irc", client.getNickname(), modeChange));
 }
