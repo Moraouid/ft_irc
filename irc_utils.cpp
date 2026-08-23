@@ -61,6 +61,11 @@ std::string rplTopic(const std::string &serverName, const std::string &nickname,
     return ":" + serverName + " 332 " + nickname + " " + channel + " :" + topic + "\r\n";
 }
 
+std::string rplTopicChanged(const std::string &nickname, const std::string &username, const std::string &channelName, const std::string &topic)
+{
+	return ":" + nickname + "!" + username + "@localhost TOPIC " + channelName + " :" + topic + "\r\n";
+}
+
 std::string rplInviting(const std::string &serverName, const std::string &nickname, const std::string &channel, const std::string &targetNick)
 {
     return ":" + serverName + " 341 " + nickname + " " + targetNick + " " + channel + "\r\n";

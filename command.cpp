@@ -260,7 +260,7 @@ void handleKickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 	debugPrint("Client " + client.getNickname() + " kicked " + targetNick + " from " + channelName);
 }
 
-void handleTopicCommand(Client &client, const c_cmd &scmd, std::map<std::string, Channel> &channels)
+void handleTopicCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels)
 {
 	if (scmd.args.size() < 2)
 	{
@@ -270,7 +270,10 @@ void handleTopicCommand(Client &client, const c_cmd &scmd, std::map<std::string,
 			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
 			if (chIt != channels.end())
 			{
-				client.appendOut(rplTopic("irc", client.getNickname(), channelName, chIt->second.getTopic()));
+				if (chIt->second.getTopic().empty())
+					client.appendOut(formatReply("331", client.getNickname(), channelName + " :No topic is set"));
+				else
+					client.appendOut(rplTopic("irc", client.getNickname(), channelName, chIt->second.getTopic()));
 				return;
 			}
 			else
@@ -286,8 +289,17 @@ void handleTopicCommand(Client &client, const c_cmd &scmd, std::map<std::string,
 	std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
 	if (chIt != channels.end())
 	{
-		chIt->second.setTopic(scmd.args[1]);
-		client.appendOut(rplTopic("irc", client.getNickname(), channelName, scmd.args[1]));
+		std::string newTopic = scmd.args[1];
+		for (size_t i = 2; i < scmd.args.size(); ++i)
+			newTopic += " " + scmd.args[i];
+		chIt->second.setTopic(newTopic);
+		std::string topicMessage = rplTopicChanged(client.getNickname(), client.getUsername(), channelName, newTopic);
+		for (std::vector<int>::const_iterator it = chIt->second.getMembers().begin(); it != chIt->second.getMembers().end(); ++it)
+		{
+			std::map<int, Client>::iterator clientIt = clients.find(*it);
+			if (clientIt != clients.end())
+				clientIt->second.appendOut(topicMessage);
+		}
 	}
 	else
 		client.appendOut(errNoSuchChannel("irc", client.getNickname(), channelName));
