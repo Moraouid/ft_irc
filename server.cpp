@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/22 17:50:12 by sfaouzi          ###   ########.fr       */
+/*   Updated: 2026/08/23 01:25:14 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,7 +32,7 @@ Server::server_errors::server_errors(std::string msg)
     this->msg = msg;
 }
 
-const char *Server::server_errors::what() throw()
+const char *Server::server_errors::what() const throw()
 {
     return msg.c_str();
 }
@@ -85,7 +85,6 @@ int Server::handle_arriving_data(size_t *i)
             {
                 clients[poll_fds[*i].fd].parseCommand(cmd, &scmd);
                 clients[poll_fds[*i].fd].handleCommand(&scmd, password, clients, channels);
-                // parsing and executing logic
             }
         }
         return 1;
@@ -167,9 +166,8 @@ void Server::init_connection()
 {
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons(6667);
+    serverAddress.sin_port = htons(port_number);
     serverAddress.sin_addr.s_addr = INADDR_ANY;
-    password = "pass";
 
     int opt = 1;
     listening_fd = socket(AF_INET, SOCK_STREAM, 0);

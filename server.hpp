@@ -47,7 +47,7 @@ class Server
             public:
                 server_errors();
                 server_errors(std::string msg);
-                const char *what() throw();
+                const char *what() const throw();
                 ~server_errors() throw();
         };
         Server();

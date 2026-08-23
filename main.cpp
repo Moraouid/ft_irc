@@ -6,7 +6,7 @@
 /*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/16 02:32:37 by sel-abbo          #+#    #+#             */
-/*   Updated: 2026/08/14 03:20:20 by isakrout         ###   ########.fr       */
+/*   Updated: 2026/08/23 01:21:05 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,12 +21,20 @@ void handle_sigint(int)
 
 int main(int ac, char *av[])
 {
-    (void)av;
-    (void)ac;
+    try
+    {
+        if (ac != 3)
+            throw Server::server_errors("provide arguments as follows: ./ircserv <port> <password>");
 
-    Server server;
+        int port_num = std::atoi(av[1]);
+        Server server(port_num, av[2]);
 
-    signal(SIGINT, handle_sigint);
-    server.init_connection();
-    server.run_server();
+        signal(SIGINT, handle_sigint);
+        server.init_connection();
+        server.run_server();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }

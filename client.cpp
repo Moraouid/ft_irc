@@ -130,17 +130,14 @@ void Client::parseCommand(std::string cmd, c_cmd *scmd)
 		{
 			size_t nextSpacePos = cmd.find(' ', spacePos + 1);
 			std::string arg;
-			if (nextSpacePos != std::string::npos)
+			if (cmd[spacePos + 1] == ':')
 			{
-				if (cmd[spacePos + 1] == ':')
-				{
-					arg = cmd.substr(spacePos + 2);
-					scmd->args.push_back(arg);
-					break;
-				}
-				arg = cmd.substr(spacePos + 1, nextSpacePos - spacePos - 1);
+				arg = cmd.substr(spacePos + 2);
+				scmd->args.push_back(arg);
+				break;
 			}
-			else
+			arg = cmd.substr(spacePos + 1, nextSpacePos - spacePos - 1);
+			if (nextSpacePos == std::string::npos)
 			{
 				arg = cmd.substr(spacePos + 1);
 			}
