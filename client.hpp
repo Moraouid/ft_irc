@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #include "channel.hpp"
 #include "irc_utils.hpp"
-
+#include "command.hpp"
 
 typedef struct command
 {
@@ -57,7 +57,8 @@ public:
 	// Setters
 	void setNickname(std::string nick);
 	void setUsername(std::string user);
-	void setPass(std::string password){
+	void setPass(std::string password)
+	{
 		pass = password;
 	};
 	void setState();
@@ -70,6 +71,5 @@ public:
 	void appendOut(std::string data);
 	void clearInBuffer();
 };
-
 
 #endif

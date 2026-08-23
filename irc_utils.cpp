@@ -138,6 +138,25 @@ std::string errNotRegistered(const std::string &serverName, const std::string &n
 
 std::string errPasswdMismatch(const std::string &serverName, const std::string &nickname)
 {
-    return ":" + serverName + " 464 " + nickname + " :Password incorrect\r\n";
+    return ":" + serverName + " 464 " + nickname + " :Incorrect password\r\n";
 }
 
+std::string rplChannelMode(const std::string &serverName, const std::string &nickname, const std::string &channelName, const std::string &modes)
+{
+	return ":" + serverName + " 324 " + nickname + " " + channelName + " " + modes + "\r\n";
+}
+
+std::string errUserNotOnChannel(const std::string &serverName, const std::string &nickname, const std::string &targetNick, const std::string &channelName)
+{
+	return ":" + serverName + " 441 " + nickname + " " + targetNick + " " + channelName + " :They aren't on that channel\r\n";
+}
+
+std::string setNickname(const std::string &oldNick, const std::string &newNick, const std::string &username)
+{
+	return ":" + oldNick + "!" + username + "@localhost NICK :" + newNick + "\r\n";
+}
+
+std::string errUnknownCommand(const std::string &serverName, const std::string &nickname, const std::string &command)
+{
+	return ":" + serverName + " 421 " + nickname + " " + command + " :Unknown command\r\n";
+}
