@@ -146,6 +146,7 @@ void handleJoinCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 	client.appendOut(joinMessage);
 	client.appendOut(formatReply("353", client.getNickname(), "= " + channelName + " :" + namesList));
 	client.appendOut(formatReply("366", client.getNickname(), channelName + " :End of NAMES list"));
+	client.appendOut(rplTopic("irc", client.getNickname(), channelName, chIt->second.getTopic()));
 	debugPrint("Client " + client.getNickname() + " joined " + channelName);
 }
 
@@ -262,16 +263,20 @@ void handleKickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 
 void handleTopicCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels)
 {
+	std::cout << "Handling TOPIC command for client: " << client.getNickname() << std::endl;
 	if (scmd.args.size() < 2)
 	{
 		if (scmd.args.size() == 1)
 		{
 			std::string channelName = scmd.args[0];
 			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
+			std::cout << "Topic for channel " << channelName << ": " << chIt->second.getTopic() << std::endl;
 			if (chIt != channels.end())
 			{
 				if (chIt->second.getTopic().empty())
+				{
 					client.appendOut(formatReply("331", client.getNickname(), channelName + " :No topic is set"));
+				}
 				else
 					client.appendOut(rplTopic("irc", client.getNickname(), channelName, chIt->second.getTopic()));
 				return;
