@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: isakrout <isakrout@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/16 21:52:04 by sfaouzi          ###   ########.fr       */
+/*   Updated: 2026/08/23 01:23:03 by isakrout         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ class Server
             public:
                 server_errors();
                 server_errors(std::string msg);
-                const char *what() throw();
+                const char *what() const throw();
                 ~server_errors() throw();
         };
         Server();
