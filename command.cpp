@@ -70,7 +70,7 @@ void handlePrivmsgCommand(Client &client, const c_cmd &scmd, std::map<int, Clien
 	if (target == "loffi")
 	{
 		Bot bot;
-		std::string bot_response = bot.bot_handle(scmd.args[1], client.getNickname(), clients.size() - 1);
+		std::string bot_response = bot.bot_handle(scmd.args[1], clients, channels);
 		std::string bot_msg = ":loffi!bot@localhost PRIVMSG " + client.getNickname() + " :" + bot_response + "\r\n";
 		client.appendOut(bot_msg);
 		return;
