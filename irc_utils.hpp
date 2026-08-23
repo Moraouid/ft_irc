@@ -22,6 +22,7 @@ std::string errNoSuchChannel(const std::string &serverName, const std::string &n
 std::string errNoSuchNick(const std::string &serverName, const std::string &nickname, const std::string &targetNick);
 std::string errNotOnChannel(const std::string &serverName, const std::string &nickname, const std::string &channelName);
 std::string errUserOnChannel(const std::string &serverName, const std::string &nickname, const std::string &targetNick, const std::string &channelName);
+std::string errUserNotOnChannel(const std::string &serverName, const std::string &nickname, const std::string &targetNick, const std::string &channelName);
 std::string errChanOpPrivsNeeded(const std::string &serverName, const std::string &nickname, const std::string &channelName);
 std::string errBadChannelKey(const std::string &serverName, const std::string &nickname, const std::string &channelName);
 std::string errChannelIsFull(const std::string &serverName, const std::string &nickname, const std::string &channelName);
@@ -29,5 +30,6 @@ std::string errUnknownMode(const std::string &serverName, const std::string &nic
 std::string errNicknameInUse(const std::string &serverName, const std::string &nickname, const std::string &targetNick);
 std::string errNotRegistered(const std::string &serverName, const std::string &nickname);
 std::string errPasswdMismatch(const std::string &serverName, const std::string &nickname);
+std::string rplChannelMode(const std::string &serverName, const std::string &nickname, const std::string &channelName, const std::string &modes);
 
 #endif

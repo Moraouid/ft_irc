@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   server.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sfaouzi <sfaouzi@student.1337.ma>          +#+  +:+       +#+        */
+/*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:52:36 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/16 21:52:04 by sfaouzi          ###   ########.fr       */
+/*   Updated: 2026/08/23 02:35:07 by sel-abbo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,24 +28,6 @@
 #include "client.hpp"
 #include "channel.hpp"
 #include <signal.h>
-
-//class Client
-//{
-//    public:
-//        int fd;
-//        std::string name;
-//        std::string in_buff;
-//        std::string out_buff;
-//    public:
-//        Client(){}
-//        Client(int fd, std::string name, std::string in, std::string out)
-//        {
-//            this->fd = fd;
-//            this->fd = fd;
-//            this->in_buff = in;
-//            this->out_buff = out;
-//        }
-//};
 
 class Server
 {
