@@ -3,8 +3,6 @@
 
 #include <sstream>
 
-
-
 Client::Client()
 {
 	fd = -1;
@@ -217,8 +215,13 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 	}
 	else
 	{
-		if (scmd->cmd == "PRIVMSG" && scmd->args.size() >= 2)
+		if (scmd->cmd == "PRIVMSG")
 		{
+			if (scmd->args.size() < 2 || scmd->args[0].empty() || scmd->args[1].empty())
+			{
+				appendOut(errNeedMoreParams("irc", nickname, "PRIVMSG"));
+				return;
+			}
 			std::string target = scmd->args[0];
 			std::string message = formatPrivmsg(nickname, username, target, scmd->args[1]);
 
@@ -237,10 +240,10 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			if (target == "loffi")
 			{
 				Bot bot;
-				std::string bot_response = bot.bot_handle(scmd->args[1], nickname, clients.size() -1);
+				std::string bot_response = bot.bot_handle(scmd->args[1], nickname, clients.size() - 1);
 				std::string bot_msg = ":loffi!bot@localhost PRIVMSG " + nickname + " :" + bot_response + "\r\n";
 				appendOut(bot_msg);
-				return ;
+				return;
 			}
 			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 			{
@@ -307,7 +310,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 					continue;
 				std::map<int, Client>::iterator clientIt = clients.find(*it);
 				if (clientIt != clients.end())
-				clientIt->second.appendOut(joinMessage);
+					clientIt->second.appendOut(joinMessage);
 			}
 			appendOut(joinMessage);
 			appendOut(formatReply("353", nickname, "= " + channelName + " :" + namesList));
@@ -356,69 +359,69 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 			}
 			appendOut(errNoSuchNick("irc", nickname, targetNick));
 		}
-			else if (scmd->cmd == "KICK")
+		else if (scmd->cmd == "KICK")
+		{
+			if (scmd->args.size() < 2 || scmd->args[0].empty() || scmd->args[1].empty())
 			{
-				if (scmd->args.size() < 2 || scmd->args[0].empty() || scmd->args[1].empty())
-				{
-					appendOut(errNeedMoreParams("irc", nickname, "KICK"));
-					return;
-				}
-				std::string channelName = scmd->args[0];
-				std::string targetNick = scmd->args[1];
-				std::string reason = "Kicked";
-				if (scmd->args.size() >= 3 && !scmd->args[2].empty())
-					reason = scmd->args[2];
-				std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
-				if (chIt == channels.end())
-				{
-					appendOut(errNoSuchChannel("irc", nickname, channelName));
-					return;
-				}
-				if (!chIt->second.hasMember(fd))
-				{
-					appendOut(errNotOnChannel("irc", nickname, channelName));
-					return;
-				}
-				if (!chIt->second.isOperator(getFd()))
-				{
-					appendOut(errChanOpPrivsNeeded("irc", nickname, channelName));
-					return;
-				}
-				int targetFd = -1;
-				for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
-				{
-					if (it->second.getNickname() == targetNick)
-					{
-						targetFd = it->first;
-						break;
-					}
-				}
-				if (targetFd == -1)
-				{
-					appendOut(errNoSuchNick("irc", nickname, targetNick));
-					return;
-				}
-				if (!chIt->second.hasMember(targetFd))
-				{
-					appendOut(errUserOnChannel("irc", nickname, targetNick, channelName));
-					return;
-				}
-				// remove target from channel and notify
-				chIt->second.removeMember(targetFd);
-				clients[targetFd].leaveChannel(channelName);
-				if(chIt->second.getMembers().empty())
-				{
-					channels.erase(chIt);
-				}
-				std::string kickMsg = ":" + nickname + "!" + username + "@localhost KICK " + channelName + " " + targetNick + " :" + reason + "\r\n";
-				// send to kicked user
-				clients[targetFd].appendOut(kickMsg);
-				// broadcast to remaining members
-				chIt->second.broadcast(kickMsg, getFd(), clients);
-				// send to kicker as confirmation
-				appendOut(kickMsg);
-				debugPrint("Client " + nickname + " kicked " + targetNick + " from " + channelName);
+				appendOut(errNeedMoreParams("irc", nickname, "KICK"));
+				return;
 			}
+			std::string channelName = scmd->args[0];
+			std::string targetNick = scmd->args[1];
+			std::string reason = "Kicked";
+			if (scmd->args.size() >= 3 && !scmd->args[2].empty())
+				reason = scmd->args[2];
+			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
+			if (chIt == channels.end())
+			{
+				appendOut(errNoSuchChannel("irc", nickname, channelName));
+				return;
+			}
+			if (!chIt->second.hasMember(fd))
+			{
+				appendOut(errNotOnChannel("irc", nickname, channelName));
+				return;
+			}
+			if (!chIt->second.isOperator(getFd()))
+			{
+				appendOut(errChanOpPrivsNeeded("irc", nickname, channelName));
+				return;
+			}
+			int targetFd = -1;
+			for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
+			{
+				if (it->second.getNickname() == targetNick)
+				{
+					targetFd = it->first;
+					break;
+				}
+			}
+			if (targetFd == -1)
+			{
+				appendOut(errNoSuchNick("irc", nickname, targetNick));
+				return;
+			}
+			if (!chIt->second.hasMember(targetFd))
+			{
+				appendOut(errUserOnChannel("irc", nickname, targetNick, channelName));
+				return;
+			}
+			// remove target from channel and notify
+			chIt->second.removeMember(targetFd);
+			clients[targetFd].leaveChannel(channelName);
+			if (chIt->second.getMembers().empty())
+			{
+				channels.erase(chIt);
+			}
+			std::string kickMsg = ":" + nickname + "!" + username + "@localhost KICK " + channelName + " " + targetNick + " :" + reason + "\r\n";
+			// send to kicked user
+			clients[targetFd].appendOut(kickMsg);
+			// broadcast to remaining members
+			chIt->second.broadcast(kickMsg, getFd(), clients);
+			// send to kicker as confirmation
+			appendOut(kickMsg);
+			debugPrint("Client " + nickname + " kicked " + targetNick + " from " + channelName);
+		}
 		else if (scmd->cmd == "TOPIC")
 		{
 			if (scmd->args.size() < 2)
