@@ -1,5 +1,5 @@
 #ifndef COMMAND_HPP
-#define COMMAND_HHP
+#define COMMAND_HPP
 
 #include "client.hpp"
 #include "irc_utils.hpp"
