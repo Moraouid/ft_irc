@@ -2,7 +2,13 @@
 
 void handlePassCommand(Client &client, const c_cmd &scmd, const std::string &serverPassword)
 {
-	if (scmd.args.empty() || scmd.args[0].empty() || scmd.args[0] != serverPassword)
+	if(scmd.args.empty() || scmd.args[0].empty())
+	{
+		client.appendOut(errNeedMoreParams("irc", "*", "PASS"));
+		return;
+	}
+
+	if (scmd.args[0] != serverPassword)
 	{
 		client.appendOut(errPasswdMismatch("irc", "*"));
 		return;
@@ -37,7 +43,7 @@ void handleNickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 
 void handleUserCommand(Client &client, const c_cmd &scmd)
 {
-	if (scmd.args.empty() || scmd.args[0].empty())
+	if (scmd.args.size() < 4)
 	{
 		client.appendOut(errNeedMoreParams("irc", "*", "USER"));
 		return;
@@ -250,9 +256,7 @@ void handleKickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 	chIt->second.removeMember(targetFd);
 	clients[targetFd].leaveChannel(channelName);
 	if (chIt->second.getMembers().empty())
-	{
 		channels.erase(chIt);
-	}
 
 	std::string kickMsg = ":" + client.getNickname() + "!" + client.getUsername() + "@localhost KICK " + channelName + " " + targetNick + " :" + reason + "\r\n";
 	clients[targetFd].appendOut(kickMsg);
