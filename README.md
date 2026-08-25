@@ -37,7 +37,7 @@ make
 This will compile the server executable:
 
 ```bash
-./ircserv
+./ircserv <port> <password>
 ```
 
 ### Execution
@@ -47,10 +47,14 @@ The server is configured to listen on port `6667` and uses the default password 
 To connect, you can use any IRC client or a simple TCP client such as `nc`:
 
 ```bash
-nc 127.0.0.1 6667
+irssi -c <hostname> -n <nikcname> -w <password> -p <port>
+```
+or 
+```bash
+nc <hostname> <port>
 ```
 
-A typical login sequence is:
+A typical login sequence (in case of using `nc`) is:
 
 ```text
 PASS pass
@@ -79,6 +83,8 @@ PRIVMSG #general :Hello everyone!
 - POSIX sockets programming documentation and examples for `socket()`, `bind()`, `listen()`, `accept()`, and `recv()`
 - Linux `poll(2)` documentation for multiplexed I/O
 - IRC community documentation and protocol examples for command semantics and message formatting
+- `ip(7)`: The official Linux reference documentation for programming IPv4 network applications in C/C++
+- `book`: TCPIP Sockets in C by Michael J. Donahoo 
 
 ### AI usage
 
