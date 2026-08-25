@@ -6,7 +6,7 @@
 /*   By: sel-abbo < sel-abbo@student.1337.ma>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/29 06:50:39 by isakrout          #+#    #+#             */
-/*   Updated: 2026/08/25 02:29:04 by sel-abbo         ###   ########.fr       */
+/*   Updated: 2026/08/25 19:27:06 by sel-abbo         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,7 @@ void Server::handle_connection()
     new_clt.revents = 0;
     poll_fds.push_back(new_clt);
 
-    std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd, ""));
+    std::pair<int, Client> cl = std::make_pair(connect_fd, Client(connect_fd));
     clients.insert(cl);
     fcntl(connect_fd, F_SETFL, O_NONBLOCK);
     std::cout << "Client connected on fd " << connect_fd << std::endl;
@@ -177,7 +177,7 @@ void Server::init_connection()
         throw Server::server_errors("cannot set socket option");
     if (bind(listening_fd, (struct sockaddr *)&serverAddress, sizeof(serverAddress)) < 0)
         throw Server::server_errors("cannot bind the socket");
-    if (listen(listening_fd, 1) < 0)
+    if (listen(listening_fd, SOMAXCONN) < 0)
         throw Server::server_errors("listen failed");
 
     struct pollfd listen_poll_fd;
@@ -187,7 +187,7 @@ void Server::init_connection()
     poll_fds.push_back(listen_poll_fd);
     fcntl(listening_fd, F_SETFL, O_NONBLOCK);
 
-    Client bot_clt(-1, "");
+    Client bot_clt(-1);
     bot_clt.setNickname("loffi");
     bot_clt.setUsername("bot");
     bot_clt.setPass(password);
