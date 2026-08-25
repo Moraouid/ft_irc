@@ -85,6 +85,8 @@ void Client::setNickname(std::string nick) { nickname = nick; }
 
 void Client::setUsername(std::string user) { username = user; }
 
+void Client::setPass(std::string password) { pass = password; }
+
 void Client::setState()
 {
 	if (username.empty() || nickname.empty() || pass.empty())
@@ -122,6 +124,13 @@ void Client::parseCommand(std::string cmd, c_cmd *scmd)
 	scmd->cmd = "";
 	scmd->args.clear();
 
+	if(cmd[0] == ':')
+	{
+		size_t spacePos = cmd.find(' ');
+		std::string cmdWithoutPrefix = cmd.substr(spacePos + 1);
+		cmd = cmdWithoutPrefix;
+	}
+	
 	size_t spacePos = cmd.find(' ');
 	if (spacePos != std::string::npos)
 	{
@@ -161,7 +170,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 		if (scmd->cmd == "PASS")
 			handlePassCommand(*this, *scmd, password);
 		else if (scmd->cmd == "NICK")
-			handleNickCommand(*this, *scmd, clients);
+			handleNickCommand(*this, *scmd, clients, channels);
 		else if (scmd->cmd == "USER")
 			handleUserCommand(*this, *scmd);
 		else
@@ -177,7 +186,7 @@ void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Clie
 	else
 	{
 		if (scmd->cmd == "NICK")
-			handleNickCommand(*this, *scmd, clients);
+			handleNickCommand(*this, *scmd, clients, channels);
 		else if (scmd->cmd == "PRIVMSG")
 			handlePrivmsgCommand(*this, *scmd, clients, channels);
 		else if (scmd->cmd == "JOIN")

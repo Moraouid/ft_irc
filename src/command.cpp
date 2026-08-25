@@ -17,7 +17,7 @@ void handlePassCommand(Client &client, const c_cmd &scmd, const std::string &ser
 	client.appendOut(formatReply("001", "*", "Password Accepted"));
 }
 
-void handleNickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients)
+void handleNickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels)
 {
 	if (scmd.args.empty() || scmd.args[0].empty())
 	{
@@ -38,7 +38,17 @@ void handleNickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 	if (oldNick.empty())
 		client.appendOut(formatNotice(client.getNickname(), "Nickname set successfully."));
 	else
+	{
+		for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it)
+		{
+			if (it->second.hasMember(client.getFd()))
+			{
+				std::string nickChangeMsg = ":" + oldNick + "!" + client.getUsername() + "@localhost NICK :" + client.getNickname() + "\r\n";
+				it->second.broadcast(nickChangeMsg, client.getFd(), clients);
+			}
+		}
 		client.appendOut(setNickname(oldNick, client.getNickname(), client.getUsername()));
+	}
 }
 
 void handleUserCommand(Client &client, const c_cmd &scmd)
@@ -73,6 +83,7 @@ void handlePrivmsgCommand(Client &client, const c_cmd &scmd, std::map<int, Clien
 		client.appendOut(errNoSuchChannel("irc", client.getNickname(), target));
 		return;
 	}
+
 	if (target == "loffi")
 	{
 		Bot bot;
@@ -81,6 +92,7 @@ void handlePrivmsgCommand(Client &client, const c_cmd &scmd, std::map<int, Clien
 		client.appendOut(bot_msg);
 		return;
 	}
+
 	for (std::map<int, Client>::iterator it = clients.begin(); it != clients.end(); ++it)
 	{
 		if (it->second.getNickname() == target)
@@ -89,6 +101,7 @@ void handlePrivmsgCommand(Client &client, const c_cmd &scmd, std::map<int, Clien
 			return;
 		}
 	}
+
 	client.appendOut(errNoSuchNick("irc", client.getNickname(), target));
 }
 

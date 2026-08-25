@@ -57,10 +57,7 @@ public:
 	// Setters
 	void setNickname(std::string nick);
 	void setUsername(std::string user);
-	void setPass(std::string password)
-	{
-		pass = password;
-	};
+	void setPass(std::string password);
 	void setState();
 
 	void joinChannel(const std::string &channelName);
