@@ -147,9 +147,7 @@ void Client::parseCommand(std::string cmd, c_cmd *scmd)
 		}
 	}
 	else
-	{
 		scmd->cmd = cmd;
-	}
 }
 
 void Client::handleCommand(c_cmd *scmd, std::string password, std::map<int, Client> &clients, std::map<std::string, Channel> &channels)
