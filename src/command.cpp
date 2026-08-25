@@ -279,20 +279,16 @@ void handleKickCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 
 void handleTopicCommand(Client &client, const c_cmd &scmd, std::map<int, Client> &clients, std::map<std::string, Channel> &channels)
 {
-	std::cout << "Handling TOPIC command for client: " << client.getNickname() << std::endl;
 	if (scmd.args.size() < 2)
 	{
 		if (scmd.args.size() == 1)
 		{
 			std::string channelName = scmd.args[0];
 			std::map<std::string, Channel>::iterator chIt = channels.find(channelName);
-			std::cout << "Topic for channel " << channelName << ": " << chIt->second.getTopic() << std::endl;
 			if (chIt != channels.end())
 			{
 				if (chIt->second.getTopic().empty())
-				{
 					client.appendOut(formatReply("331", client.getNickname(), channelName + " :No topic is set"));
-				}
 				else
 					client.appendOut(rplTopic("irc", client.getNickname(), channelName, chIt->second.getTopic()));
 				return;
@@ -424,23 +420,19 @@ void handleModeCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 
 	if (scmd.args.size() < 2)
 	{
-		std::string modes = "";
+		std::ostringstream ms;
+		std::string modes = "+";
 		if (chIt->second.getIsPrivate())
-			modes += "+i";
+			modes += "i";
 		if (chIt->second.hasUserLimit())
 		{
-			if (!modes.empty())
-				modes += " ";
-			std::ostringstream ms;
-			ms << "+l " << chIt->second.getUserLimit();
-			modes += ms.str();
+			ms << " " <<  chIt->second.getUserLimit();
+			modes += "l";
 		}
 		if (chIt->second.getIsLocked())
-		{
-			if (!modes.empty())
-				modes += " ";
-			modes += "+k";
-		}
+			modes += "k";
+		modes += ms.str();
+
 		client.appendOut(rplChannelMode("irc", client.getNickname(), channelName, modes));
 		return;
 	}

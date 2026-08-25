@@ -6,7 +6,6 @@
 Client::Client()
 {
 	fd = -1;
-	ipAddress = "";
 	nickname = "";
 	username = "";
 	pass = "";
@@ -15,10 +14,9 @@ Client::Client()
 	outBuffer = "";
 }
 
-Client::Client(int fd, std::string ip)
+Client::Client(int fd)
 {
 	this->fd = fd;
-	this->ipAddress = ip;
 	nickname = "";
 	username = "";
 	pass = "";
@@ -30,7 +28,6 @@ Client::Client(int fd, std::string ip)
 Client::Client(const Client &copy)
 {
 	fd = copy.fd;
-	ipAddress = copy.ipAddress;
 	nickname = copy.nickname;
 	username = copy.username;
 	pass = copy.pass;
@@ -44,7 +41,6 @@ Client &Client::operator=(const Client &assign)
 	if (this != &assign)
 	{
 		fd = assign.fd;
-		ipAddress = assign.ipAddress;
 		nickname = assign.nickname;
 		username = assign.username;
 		pass = assign.pass;

@@ -26,7 +26,6 @@ class Client
 {
 private:
 	int fd;
-	std::string ipAddress;
 
 	std::string nickname;
 	std::string username;
@@ -39,7 +38,7 @@ private:
 
 public:
 	Client();
-	Client(int fd, std::string ip);
+	Client(int fd);
 	Client(const Client &copy);
 	Client &operator=(const Client &assign);
 	~Client();
