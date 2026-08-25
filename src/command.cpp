@@ -120,7 +120,8 @@ void handleJoinCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 		chIt = channels.find(channelName);
 		chIt->second.addOperator(client.getFd());
 	}
-	if (chIt->second.getIsLocked())
+
+	if (chIt->second.getIsLocked()) // mode +k 
 	{
 		if (scmd.args.size() < 2 || scmd.args[1] != chIt->second.getKey())
 		{
@@ -128,20 +129,24 @@ void handleJoinCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 			return;
 		}
 	}
-	if (chIt->second.getIsPrivate() && !chIt->second.isOperator(client.getFd()) && !chIt->second.isInvited(client.getFd()))
+
+	if (chIt->second.getIsPrivate() && !chIt->second.isInvited(client.getFd())) // mode +i
 	{
 		client.appendOut(errInviteOnlyChan("irc", client.getNickname(), channelName));
 		return;
 	}
-	if (chIt->second.hasUserLimit() && (int)chIt->second.getMembers().size() >= chIt->second.getUserLimit())
+
+	if (chIt->second.hasUserLimit() && (int)chIt->second.getMembers().size() >= chIt->second.getUserLimit()) // mode +l
 	{
 		client.appendOut(errChannelIsFull("irc", client.getNickname(), channelName));
 		return;
 	}
+
 	chIt->second.addMember(client.getFd());
 	chIt->second.removeInvitedMember(client.getFd());
 	client.joinChannel(channelName);
 	std::string joinMessage = rplJoin(client.getNickname(), client.getUsername(), "localhost", channelName);
+
 	std::string namesList;
 	for (std::vector<int>::const_iterator it = chIt->second.getMembers().begin(); it != chIt->second.getMembers().end(); ++it)
 	{
@@ -154,14 +159,8 @@ void handleJoinCommand(Client &client, const c_cmd &scmd, std::map<int, Client> 
 			namesList += "@";
 		namesList += clientIt->second.getNickname();
 	}
-	for (std::vector<int>::const_iterator it = chIt->second.getMembers().begin(); it != chIt->second.getMembers().end(); ++it)
-	{
-		if (*it == client.getFd())
-			continue;
-		std::map<int, Client>::iterator clientIt = clients.find(*it);
-		if (clientIt != clients.end())
-			clientIt->second.appendOut(joinMessage);
-	}
+
+	chIt->second.broadcast(joinMessage, client.getFd(), clients);
 	client.appendOut(joinMessage);
 	client.appendOut(formatReply("353", client.getNickname(), "= " + channelName + " :" + namesList));
 	client.appendOut(formatReply("366", client.getNickname(), channelName + " :End of NAMES list"));
