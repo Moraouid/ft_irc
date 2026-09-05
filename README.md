@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by isakrout, sel-abbo, sfaouzi.*
+*This project has been created as part of the 42 curriculum by <a href="https://github.com/ismakr">isakrout</a>, <a href="https://github.com/moraouid">sel-abbo</a>, <a href="https://github.com/saidfaouzi">sfaouzi</a> .*
 
 # ft_irc
 
